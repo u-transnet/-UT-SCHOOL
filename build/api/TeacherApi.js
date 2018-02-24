@@ -355,8 +355,9 @@ var TeacherApi = (_class = function () {
                         feeAsset = _res5[1];
 
                     var tr = new _bitsharesjs.TransactionBuilder();
+                    teacherAccount = teacherAccount.get('id');
 
-                    tr.add_type_operation("proposal_update_operation", {
+                    tr.add_type_operation("proposal_update", {
                         fee: {
                             amount: 0,
                             asset_id: feeAsset.get("id")

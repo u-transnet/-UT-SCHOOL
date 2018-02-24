@@ -67,7 +67,7 @@ class StudentApi{
                     assetsMap[asset.get('id')] = {
                         'id': asset.get('id'),
                         'symbol': asset.get('symbol'),
-                        'received': false,
+                        'accepted': false,
                         'balance': ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
                     };
 
@@ -77,7 +77,7 @@ class StudentApi{
                         if(transferData.from == lectureAccountId
                             && transferData.to == studentAccountId
                             && assetsMap[transferData.amount.asset_id]){
-                            assetsMap[transferData.amount.asset_id].received = true;
+                            assetsMap[transferData.amount.asset_id].accepted = true;
                         }
                     }
                     resolve(assetsMap);

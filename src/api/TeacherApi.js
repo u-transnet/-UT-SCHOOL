@@ -201,8 +201,9 @@ class TeacherApi{
             ]).then((res)=> {
                 let [teacherAccount, feeAsset] = res;
                 let tr = new TransactionBuilder();
+                teacherAccount = teacherAccount.get('id');
 
-                tr.add_type_operation("proposal_update_operation", {
+                tr.add_type_operation("proposal_update", {
                     fee: {
                         amount: 0,
                         asset_id: feeAsset.get("id")
