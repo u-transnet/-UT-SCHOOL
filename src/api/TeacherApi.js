@@ -14,14 +14,20 @@ class TeacherApi{
         this.feeAsset='BTS';
     }
 
-
+    /**
+     * @desc send education token from lecture account to particular student
+     * @param lectureAccount - name of the bitshares lecture account
+     * @param studentAccount - name of the bitshares student account
+     * @param educationToken - name of the bitshares education token
+     * @return serialized transaction
+     */
     @apiCall
-    _sendToken(lectureAccount, studentAccount, token){
+    _sendToken(lectureAccount, studentAccount, educationToken){
         return new Promise((resolve, reject)=>{
             Promise.all([
                 FetchChain("getAccount", lectureAccount),
                 FetchChain("getAccount", studentAccount),
-                FetchChain("getAsset", token),
+                FetchChain("getAsset", educationToken),
                 FetchChain("getAsset", this.feeAsset)
             ]).then((res)=> {
                 let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
@@ -46,15 +52,31 @@ class TeacherApi{
         })
     }
 
+    /**
+     * @desc send session token from lecture account to particular student
+     * @param lectureAccount - name of the bitshares lecture account
+     * @param studentAccount - name of the bitshares student account
+     * @return serialized transaction
+     */
     sendSessionToken(lectureAccount, studentAccount){
         return this._sendToken(lectureAccount, studentAccount, utSchoolTokenSession);
     }
 
+    /**
+     * @desc send grade token from lecture account to particular student
+     * @param lectureAccount - name of the bitshares lecture account
+     * @param studentAccount - name of the bitshares student account
+     * @return serialized transaction
+     */
     sendGradeToken(lectureAccount, studentAccount){
         return this._sendToken(lectureAccount, studentAccount, utSchoolTokenGrade);
     }
 
 
+    /**
+     * @desc request teacher role for current bitshares account
+     * @return serialized proposal transaction
+     */
     @apiCall
     requestTeacherRole(){
         return new Promise((resolve, reject)=>{
@@ -74,7 +96,7 @@ class TeacherApi{
                     },
                     from: utSchoolAccount.get("id"),
                     to: teacherAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 0.00001},
+                    amount: { asset_id: sendAsset.get("id"), amount: 1},
                 } );
 
                 tr.propose({
@@ -90,6 +112,15 @@ class TeacherApi{
         })
     }
 
+    /**
+     * @desc fetch from blockchain information about participants of the lecture
+     * @param lectureAccount - name of the bitshares lecture account
+     * @return list of participants
+     * participant: {
+     *      id,
+     *      name
+     * }
+     */
     @apiCall
     getLectureParticipants(lectureAccount){
         return new Promise( (resolve, reject) => {
@@ -103,17 +134,17 @@ class TeacherApi{
 
 
                 BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then((operations)=>{
-                    let studentApplicationsIds = [];
+                    let lectureParticipantsIds = [];
                     for(let operation of operations){
                         let transferData=operation.op[1];
                         if(transferData.from == lectureAccount
                             && transferData.amount.asset_id == ticketAsset){
-                            studentApplicationsIds.push(transferData.to);
+                            lectureParticipantsIds.push(transferData.to);
                         }
                     }
 
 
-                    FetchChain('getAccount', studentApplicationsIds).then((accounts)=>{
+                    FetchChain('getAccount', lectureParticipantsIds).then((accounts)=>{
                         accounts = accounts.toJS();
                         let accountsMap = {};
 
@@ -121,22 +152,34 @@ class TeacherApi{
                             if(account)
                                 accountsMap[account.id] = account;
 
-                        let studentApplications = [];
-                        for(let application of studentApplicationsIds){
-                            let accountData = accountsMap[application];
-                            studentApplications.push({
+                        let lectureParticipants = [];
+                        for(let participant of lectureParticipantsIds){
+                            let accountData = accountsMap[participant];
+                            lectureParticipants.push({
                                 'id': accountData.id,
                                 'name': accountData.name
                             });
                         }
 
-                        resolve(studentApplications);
+                        resolve(lectureParticipants);
                     }).catch(reject);
                 }).catch(reject);
             }).catch(reject);
         });
     }
 
+    /**
+     * @desc fetch from blockchain information about applications for the lecture
+     * @param lectureAccount - name of the bitshares lecture account
+     * @return list of applications
+     * application: {
+     *      id, - id of proposal
+     *      account: { - information about student account requested application
+     *          id,
+     *          name
+     *      }
+     * }
+     */
     @apiCall
     getLectureApplications(lectureAccount){
         return new Promise( (resolve, reject) => {
@@ -212,6 +255,11 @@ class TeacherApi{
         });
     }
 
+    /**
+     * @desc accept proposal for application for the lecture
+     * @param lectureApplicationId - id of the proposal for application for the lecture
+     * @return serialized transaction
+     */
     @apiCall
     acceptApplication(lectureApplicationId){
         return new Promise((resolve, reject)=>{
@@ -242,6 +290,11 @@ class TeacherApi{
         })
     }
 
+    /**
+     * @desc return statistics about particular lecture
+     * @param lectureAccount - name of the bitshares lecture accout
+     * @return pair of results from getLectureParticipants and getLectureApplications
+     */
     @apiCall
     getLectureStats(lectureAccount){
         return Promise.all([
@@ -250,6 +303,13 @@ class TeacherApi{
         ])
     }
 
+    /**
+     * @desc internal method for iterating through lectures and gathering stats
+     * @param lectures - list of account objects fetched from blockchain with bitsharesjs
+     * @param index - current index in list
+     * @param onFinish - finish callback
+     * @private
+     */
     __processLectureQueue(lectures, index, onFinish){
         if(index>=lectures.length) {
             onFinish(lectures);
@@ -264,6 +324,16 @@ class TeacherApi{
         })
     }
 
+    /**
+     * @desc collect all lectures of the current user
+     * @return list of lectures
+     * lecture: {
+     *      id,
+     *      name,
+     *      participants - result of getLectureParticipants
+     *      applications - result of getLectureApplications
+     * }
+     */
     @apiCall
     getLectures(){
         return new Promise( (resolve, reject) => {

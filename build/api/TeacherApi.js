@@ -61,13 +61,22 @@ var TeacherApi = (_class = function () {
         this.feeAsset = 'BTS';
     }
 
+    /**
+     * @desc send education token from lecture account to particular student
+     * @param lectureAccount - name of the bitshares lecture account
+     * @param studentAccount - name of the bitshares student account
+     * @param educationToken - name of the bitshares education token
+     * @return serialized transaction
+     */
+
+
     _createClass(TeacherApi, [{
         key: '_sendToken',
-        value: function _sendToken(lectureAccount, studentAccount, token) {
+        value: function _sendToken(lectureAccount, studentAccount, educationToken) {
             var _this = this;
 
             return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", studentAccount), (0, _bitsharesjs.FetchChain)("getAsset", token), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", studentAccount), (0, _bitsharesjs.FetchChain)("getAsset", educationToken), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
                     var _res = _slicedToArray(res, 4),
                         lectureAccount = _res[0],
                         studentAccount = _res[1],
@@ -94,16 +103,38 @@ var TeacherApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc send session token from lecture account to particular student
+         * @param lectureAccount - name of the bitshares lecture account
+         * @param studentAccount - name of the bitshares student account
+         * @return serialized transaction
+         */
+
     }, {
         key: 'sendSessionToken',
         value: function sendSessionToken(lectureAccount, studentAccount) {
             return this._sendToken(lectureAccount, studentAccount, _Configs.utSchoolTokenSession);
         }
+
+        /**
+         * @desc send grade token from lecture account to particular student
+         * @param lectureAccount - name of the bitshares lecture account
+         * @param studentAccount - name of the bitshares student account
+         * @return serialized transaction
+         */
+
     }, {
         key: 'sendGradeToken',
         value: function sendGradeToken(lectureAccount, studentAccount) {
             return this._sendToken(lectureAccount, studentAccount, _Configs.utSchoolTokenGrade);
         }
+
+        /**
+         * @desc request teacher role for current bitshares account
+         * @return serialized proposal transaction
+         */
+
     }, {
         key: 'requestTeacherRole',
         value: function requestTeacherRole() {
@@ -126,7 +157,7 @@ var TeacherApi = (_class = function () {
                         },
                         from: utSchoolAccount.get("id"),
                         to: teacherAccount.get("id"),
-                        amount: { asset_id: sendAsset.get("id"), amount: 0.00001 }
+                        amount: { asset_id: sendAsset.get("id"), amount: 1 }
                     });
 
                     tr.propose({
@@ -141,6 +172,17 @@ var TeacherApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc fetch from blockchain information about participants of the lecture
+         * @param lectureAccount - name of the bitshares lecture account
+         * @return list of participants
+         * participant: {
+         *      id,
+         *      name
+         * }
+         */
+
     }, {
         key: 'getLectureParticipants',
         value: function getLectureParticipants(lectureAccount) {
@@ -154,7 +196,7 @@ var TeacherApi = (_class = function () {
                     ticketAsset = ticketAsset.get('id');
 
                     _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then(function (operations) {
-                        var studentApplicationsIds = [];
+                        var lectureParticipantsIds = [];
                         var _iteratorNormalCompletion = true;
                         var _didIteratorError = false;
                         var _iteratorError = undefined;
@@ -165,7 +207,7 @@ var TeacherApi = (_class = function () {
 
                                 var transferData = operation.op[1];
                                 if (transferData.from == lectureAccount && transferData.amount.asset_id == ticketAsset) {
-                                    studentApplicationsIds.push(transferData.to);
+                                    lectureParticipantsIds.push(transferData.to);
                                 }
                             }
                         } catch (err) {
@@ -183,7 +225,7 @@ var TeacherApi = (_class = function () {
                             }
                         }
 
-                        (0, _bitsharesjs.FetchChain)('getAccount', studentApplicationsIds).then(function (accounts) {
+                        (0, _bitsharesjs.FetchChain)('getAccount', lectureParticipantsIds).then(function (accounts) {
                             accounts = accounts.toJS();
                             var accountsMap = {};
 
@@ -212,17 +254,17 @@ var TeacherApi = (_class = function () {
                                 }
                             }
 
-                            var studentApplications = [];
+                            var lectureParticipants = [];
                             var _iteratorNormalCompletion3 = true;
                             var _didIteratorError3 = false;
                             var _iteratorError3 = undefined;
 
                             try {
-                                for (var _iterator3 = studentApplicationsIds[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                                    var application = _step3.value;
+                                for (var _iterator3 = lectureParticipantsIds[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                                    var participant = _step3.value;
 
-                                    var accountData = accountsMap[application];
-                                    studentApplications.push({
+                                    var accountData = accountsMap[participant];
+                                    lectureParticipants.push({
                                         'id': accountData.id,
                                         'name': accountData.name
                                     });
@@ -242,12 +284,26 @@ var TeacherApi = (_class = function () {
                                 }
                             }
 
-                            resolve(studentApplications);
+                            resolve(lectureParticipants);
                         }).catch(reject);
                     }).catch(reject);
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc fetch from blockchain information about applications for the lecture
+         * @param lectureAccount - name of the bitshares lecture account
+         * @return list of applications
+         * application: {
+         *      id, - id of proposal
+         *      account: { - information about student account requested application
+         *          id,
+         *          name
+         *      }
+         * }
+         */
+
     }, {
         key: 'getLectureApplications',
         value: function getLectureApplications(lectureAccount) {
@@ -403,6 +459,13 @@ var TeacherApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc accept proposal for application for the lecture
+         * @param lectureApplicationId - id of the proposal for application for the lecture
+         * @return serialized transaction
+         */
+
     }, {
         key: 'acceptApplication',
         value: function acceptApplication(lectureApplicationId) {
@@ -435,11 +498,27 @@ var TeacherApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc return statistics about particular lecture
+         * @param lectureAccount - name of the bitshares lecture accout
+         * @return pair of results from getLectureParticipants and getLectureApplications
+         */
+
     }, {
         key: 'getLectureStats',
         value: function getLectureStats(lectureAccount) {
             return Promise.all([this.getLectureParticipants(lectureAccount), this.getLectureApplications(lectureAccount)]);
         }
+
+        /**
+         * @desc internal method for iterating through lectures and gathering stats
+         * @param lectures - list of account objects fetched from blockchain with bitsharesjs
+         * @param index - current index in list
+         * @param onFinish - finish callback
+         * @private
+         */
+
     }, {
         key: '__processLectureQueue',
         value: function __processLectureQueue(lectures, index, onFinish) {
@@ -460,6 +539,12 @@ var TeacherApi = (_class = function () {
                 _this4.__processLectureQueue(lectures, index + 1, onFinish);
             });
         }
+
+        /**
+         * @desc collect all lectures of the current user
+         * @return {Promise}
+         */
+
     }, {
         key: 'getLectures',
         value: function getLectures() {
