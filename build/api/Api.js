@@ -63,7 +63,9 @@ var Api = (_class = function () {
             var api = new Api(accountName, privateKey);
             return new Promise(function (resolved, rejected) {
                 _BlockchainApi.BlockchainApi.init(nodeUrl).then(function () {
-                    resolved(api);
+                    new _bitsharesjs.TransactionBuilder().update_head_block().then(function () {
+                        resolved(api);
+                    });
                 });
             });
         }

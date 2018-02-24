@@ -7,43 +7,46 @@ import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolToken, utSchoolAccount} from '../common/Configs'
 
 
+
 class StudentApi{
 
     constructor(account){
         this.account=account;
-        this.feeAsset='bts';
+        this.feeAsset='BTS';
     }
 
     @apiCall
     applyForLecture(lectureAccount){
-        return Promise.all([
-            FetchChain("getAccount", lectureAccount),
-            FetchChain("getAccount", this.account.name),
-            FetchChain("getAsset", utSchoolTokenTicket),
-            FetchChain("getAsset", this.feeAsset)
-        ]).then((res)=> {
-            let [leactureAccount, studentAccount, sendAsset, feeAsset] = res;
-            let tr = new TransactionBuilder();
+        return new Promise((resolve, reject) => {
+            Promise.all([
+                FetchChain("getAccount", lectureAccount),
+                FetchChain("getAccount", this.account.name),
+                FetchChain("getAsset", utSchoolTokenTicket),
+                FetchChain("getAsset", this.feeAsset)
+            ]).then((res)=> {
+                let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
+                let tr = new TransactionBuilder();
 
-            tr.add_type_operation("transfer", {
-                fee: {
-                    amount: 0,
-                    asset_id: feeAsset.get("id")
-                },
-                from: leactureAccount.get("id"),
-                to: studentAccount.get("id"),
-                amount: { asset_id: sendAsset.get("id"), amount: 1},
-            } );
+                tr.add_type_operation("transfer", {
+                    fee: {
+                        amount: 0,
+                        asset_id: feeAsset.get("id")
+                    },
+                    from: lectureAccount.get("id"),
+                    to: studentAccount.get("id"),
+                    amount: { asset_id: sendAsset.get("id"), amount: 1},
+                } );
 
-            tr.propose({
-                fee_paying_account: studentAccount.get("id"),
-            });
+                tr.propose({
+                    fee_paying_account: studentAccount.get("id"),
+                });
 
-            tr.set_required_fees().then(() => {
-                tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
-                console.log("serialized transaction:", tr.serialize());
-                tr.broadcast()
-            });
+                tr.set_required_fees().then(() => {
+                    tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
+                    tr.broadcast().catch(reject);
+                    resolve(tr.serialize());
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 
@@ -78,8 +81,8 @@ class StudentApi{
                         }
                     }
                     resolve(assetsMap);
-                });
-            });
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 
@@ -142,11 +145,11 @@ class StudentApi{
                                     lecturesList[i].states = lecturesStates[i];
 
                                 resolve(lecturesList);
-                            });
-                        });
-                    });
-                });
-            });
+                            }).catch(reject);
+                        }).catch(reject);
+                    }).catch(reject);
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 

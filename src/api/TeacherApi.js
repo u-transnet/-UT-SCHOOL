@@ -11,37 +11,39 @@ class TeacherApi{
 
     constructor(account){
         this.account=account;
-        this.feeAsset='bts';
+        this.feeAsset='BTS';
     }
 
 
     @apiCall
     _sendToken(lectureAccount, studentAccount, token){
-        return Promise.all([
-            FetchChain("getAccount", lectureAccount),
-            FetchChain("getAccount", studentAccount),
-            FetchChain("getAsset", token),
-            FetchChain("getAsset", this.feeAsset)
-        ]).then((res)=> {
-            let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
-            let tr = new TransactionBuilder();
+        return new Promise((resolve, reject)=>{
+            Promise.all([
+                FetchChain("getAccount", lectureAccount),
+                FetchChain("getAccount", studentAccount),
+                FetchChain("getAsset", token),
+                FetchChain("getAsset", this.feeAsset)
+            ]).then((res)=> {
+                let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
+                let tr = new TransactionBuilder();
 
-            tr.add_type_operation("transfer", {
-                fee: {
-                    amount: 0,
-                    asset_id: feeAsset.get("id")
-                },
-                from: lectureAccount.get("id"),
-                to: studentAccount.get("id"),
-                amount: { asset_id: sendAsset.get("id"), amount: 1},
-            } );
+                tr.add_type_operation("transfer", {
+                    fee: {
+                        amount: 0,
+                        asset_id: feeAsset.get("id")
+                    },
+                    from: lectureAccount.get("id"),
+                    to: studentAccount.get("id"),
+                    amount: { asset_id: sendAsset.get("id"), amount: 1},
+                } );
 
-            tr.set_required_fees().then(() => {
-                tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
-                console.log("serialized transaction:", tr.serialize());
-                tr.broadcast()
-            });
-        });
+                tr.set_required_fees().then(() => {
+                    tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
+                    tr.broadcast().catch(reject);
+                    resolve(tr.serialize());
+                }).catch(reject);
+            }).catch(reject);
+        })
     }
 
     sendSessionToken(lectureAccount, studentAccount){
@@ -55,35 +57,37 @@ class TeacherApi{
 
     @apiCall
     requestTeacherRole(){
-        return Promise.all([
-            FetchChain("getAccount", utSchoolAccount),
-            FetchChain("getAccount", this.account.name),
-            FetchChain("getAsset", utSchoolToken),
-            FetchChain("getAsset", this.feeAsset)
-        ]).then((res)=> {
-            let [utSchoolAccount, teacherAccount, sendAsset, feeAsset] = res;
-            let tr = new TransactionBuilder();
+        return new Promise((resolve, reject)=>{
+            Promise.all([
+                FetchChain("getAccount", utSchoolAccount),
+                FetchChain("getAccount", this.account.name),
+                FetchChain("getAsset", utSchoolToken),
+                FetchChain("getAsset", this.feeAsset)
+            ]).then((res)=> {
+                let [utSchoolAccount, teacherAccount, sendAsset, feeAsset] = res;
+                let tr = new TransactionBuilder();
 
-            tr.add_type_operation("transfer", {
-                fee: {
-                    amount: 0,
-                    asset_id: feeAsset.get("id")
-                },
-                from: utSchoolAccount.get("id"),
-                to: teacherAccount.get("id"),
-                amount: { asset_id: sendAsset.get("id"), amount: 0.00001},
-            } );
+                tr.add_type_operation("transfer", {
+                    fee: {
+                        amount: 0,
+                        asset_id: feeAsset.get("id")
+                    },
+                    from: utSchoolAccount.get("id"),
+                    to: teacherAccount.get("id"),
+                    amount: { asset_id: sendAsset.get("id"), amount: 0.00001},
+                } );
 
-            tr.propose({
-                fee_paying_account: teacherAccount.get("id")
-            });
+                tr.propose({
+                    fee_paying_account: teacherAccount.get("id")
+                });
 
-            tr.set_required_fees().then(() => {
-                tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
-                console.log("serialized transaction:", tr.serialize());
-                tr.broadcast()
-            });
-        });
+                tr.set_required_fees().then(() => {
+                    tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
+                    tr.broadcast().catch(reject);
+                    resolve(tr.serialize());
+                }).catch(reject);
+            }).catch(reject);
+        })
     }
 
     @apiCall
@@ -108,8 +112,8 @@ class TeacherApi{
                         }
                     }
                     resolve(studentApplications);
-                });
-            });
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 
@@ -179,37 +183,39 @@ class TeacherApi{
                         }
 
                         resolve(applications);
-                    });
-                });
-            });
+                    }).catch(reject);
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 
     @apiCall
     acceptApplication(lectureApplicationId){
-        return Promise.all([
-            FetchChain("getAccount", this.account.name),
-            FetchChain("getAsset", this.feeAsset)
-        ]).then((res)=> {
-            let [teacherAccount, feeAsset] = res;
-            let tr = new TransactionBuilder();
+        return new Promise((resolve, reject)=>{
+            Promise.all([
+                FetchChain("getAccount", this.account.name),
+                FetchChain("getAsset", this.feeAsset)
+            ]).then((res)=> {
+                let [teacherAccount, feeAsset] = res;
+                let tr = new TransactionBuilder();
 
-            tr.add_type_operation("proposal_update_operation", {
-                fee: {
-                    amount: 0,
-                    asset_id: feeAsset.get("id")
-                },
-                fee_paying_account: teacherAccount,
-                proposal: lectureApplicationId,
-                active_approvals_to_add: [teacherAccount],
-            } );
+                tr.add_type_operation("proposal_update_operation", {
+                    fee: {
+                        amount: 0,
+                        asset_id: feeAsset.get("id")
+                    },
+                    fee_paying_account: teacherAccount,
+                    proposal: lectureApplicationId,
+                    active_approvals_to_add: [teacherAccount],
+                } );
 
-            tr.set_required_fees().then(() => {
-                tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
-                console.log("serialized transaction:", tr.serialize());
-                tr.broadcast()
-            });
-        });
+                tr.set_required_fees().then(() => {
+                    tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
+                    tr.broadcast().catch(reject);
+                    resolve(tr.serialize());
+                }).catch(reject);
+            }).catch(reject);
+        })
     }
 
     @apiCall
@@ -284,10 +290,10 @@ class TeacherApi{
 
 
                         this.__processLectureQueue(teachersLecturesList, 0, resolve)
-                    })
+                    }).catch(reject)
 
-                });
-            });
+                }).catch(reject);
+            }).catch(reject);
         });
     }
 

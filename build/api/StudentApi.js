@@ -58,7 +58,7 @@ var StudentApi = (_class = function () {
         _classCallCheck(this, StudentApi);
 
         this.account = account;
-        this.feeAsset = 'bts';
+        this.feeAsset = 'BTS';
     }
 
     _createClass(StudentApi, [{
@@ -66,34 +66,36 @@ var StudentApi = (_class = function () {
         value: function applyForLecture(lectureAccount) {
             var _this = this;
 
-            return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket), (0, _bitsharesjs.FetchChain)("getAsset", this.feeAsset)]).then(function (res) {
-                var _res = _slicedToArray(res, 4),
-                    leactureAccount = _res[0],
-                    studentAccount = _res[1],
-                    sendAsset = _res[2],
-                    feeAsset = _res[3];
+            return new Promise(function (resolve, reject) {
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
+                    var _res = _slicedToArray(res, 4),
+                        lectureAccount = _res[0],
+                        studentAccount = _res[1],
+                        sendAsset = _res[2],
+                        feeAsset = _res[3];
 
-                var tr = new _bitsharesjs.TransactionBuilder();
+                    var tr = new _bitsharesjs.TransactionBuilder();
 
-                tr.add_type_operation("transfer", {
-                    fee: {
-                        amount: 0,
-                        asset_id: feeAsset.get("id")
-                    },
-                    from: leactureAccount.get("id"),
-                    to: studentAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 1 }
-                });
+                    tr.add_type_operation("transfer", {
+                        fee: {
+                            amount: 0,
+                            asset_id: feeAsset.get("id")
+                        },
+                        from: lectureAccount.get("id"),
+                        to: studentAccount.get("id"),
+                        amount: { asset_id: sendAsset.get("id"), amount: 1 }
+                    });
 
-                tr.propose({
-                    fee_paying_account: studentAccount.get("id")
-                });
+                    tr.propose({
+                        fee_paying_account: studentAccount.get("id")
+                    });
 
-                tr.set_required_fees().then(function () {
-                    tr.add_signer(_this.account.privateKey, _this.account.privateKey.toPublicKey().toPublicKeyString());
-                    console.log("serialized transaction:", tr.serialize());
-                    tr.broadcast();
-                });
+                    tr.set_required_fees().then(function () {
+                        tr.add_signer(_this.account.privateKey, _this.account.privateKey.toPublicKey().toPublicKeyString());
+                        tr.broadcast().catch(reject);
+                        resolve(tr.serialize());
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -172,8 +174,8 @@ var StudentApi = (_class = function () {
                         }
 
                         resolve(assetsMap);
-                    });
-                });
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -321,11 +323,11 @@ var StudentApi = (_class = function () {
                                     for (var i = 0; i < lecturesList.length; i++) {
                                         lecturesList[i].states = lecturesStates[i];
                                     }resolve(lecturesList);
-                                });
-                            });
-                        });
-                    });
-                });
+                                }).catch(reject);
+                            }).catch(reject);
+                        }).catch(reject);
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }]);

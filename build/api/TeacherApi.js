@@ -58,7 +58,7 @@ var TeacherApi = (_class = function () {
         _classCallCheck(this, TeacherApi);
 
         this.account = account;
-        this.feeAsset = 'bts';
+        this.feeAsset = 'BTS';
     }
 
     _createClass(TeacherApi, [{
@@ -66,30 +66,32 @@ var TeacherApi = (_class = function () {
         value: function _sendToken(lectureAccount, studentAccount, token) {
             var _this = this;
 
-            return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", studentAccount), (0, _bitsharesjs.FetchChain)("getAsset", token), (0, _bitsharesjs.FetchChain)("getAsset", this.feeAsset)]).then(function (res) {
-                var _res = _slicedToArray(res, 4),
-                    lectureAccount = _res[0],
-                    studentAccount = _res[1],
-                    sendAsset = _res[2],
-                    feeAsset = _res[3];
+            return new Promise(function (resolve, reject) {
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", studentAccount), (0, _bitsharesjs.FetchChain)("getAsset", token), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
+                    var _res = _slicedToArray(res, 4),
+                        lectureAccount = _res[0],
+                        studentAccount = _res[1],
+                        sendAsset = _res[2],
+                        feeAsset = _res[3];
 
-                var tr = new _bitsharesjs.TransactionBuilder();
+                    var tr = new _bitsharesjs.TransactionBuilder();
 
-                tr.add_type_operation("transfer", {
-                    fee: {
-                        amount: 0,
-                        asset_id: feeAsset.get("id")
-                    },
-                    from: lectureAccount.get("id"),
-                    to: studentAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 1 }
-                });
+                    tr.add_type_operation("transfer", {
+                        fee: {
+                            amount: 0,
+                            asset_id: feeAsset.get("id")
+                        },
+                        from: lectureAccount.get("id"),
+                        to: studentAccount.get("id"),
+                        amount: { asset_id: sendAsset.get("id"), amount: 1 }
+                    });
 
-                tr.set_required_fees().then(function () {
-                    tr.add_signer(_this.account.privateKey, _this.account.privateKey.toPublicKey().toPublicKeyString());
-                    console.log("serialized transaction:", tr.serialize());
-                    tr.broadcast();
-                });
+                    tr.set_required_fees().then(function () {
+                        tr.add_signer(_this.account.privateKey, _this.account.privateKey.toPublicKey().toPublicKeyString());
+                        tr.broadcast().catch(reject);
+                        resolve(tr.serialize());
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -107,34 +109,36 @@ var TeacherApi = (_class = function () {
         value: function requestTeacherRole() {
             var _this2 = this;
 
-            return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken), (0, _bitsharesjs.FetchChain)("getAsset", this.feeAsset)]).then(function (res) {
-                var _res2 = _slicedToArray(res, 4),
-                    utSchoolAccount = _res2[0],
-                    teacherAccount = _res2[1],
-                    sendAsset = _res2[2],
-                    feeAsset = _res2[3];
+            return new Promise(function (resolve, reject) {
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this2.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken), (0, _bitsharesjs.FetchChain)("getAsset", _this2.feeAsset)]).then(function (res) {
+                    var _res2 = _slicedToArray(res, 4),
+                        utSchoolAccount = _res2[0],
+                        teacherAccount = _res2[1],
+                        sendAsset = _res2[2],
+                        feeAsset = _res2[3];
 
-                var tr = new _bitsharesjs.TransactionBuilder();
+                    var tr = new _bitsharesjs.TransactionBuilder();
 
-                tr.add_type_operation("transfer", {
-                    fee: {
-                        amount: 0,
-                        asset_id: feeAsset.get("id")
-                    },
-                    from: utSchoolAccount.get("id"),
-                    to: teacherAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 0.00001 }
-                });
+                    tr.add_type_operation("transfer", {
+                        fee: {
+                            amount: 0,
+                            asset_id: feeAsset.get("id")
+                        },
+                        from: utSchoolAccount.get("id"),
+                        to: teacherAccount.get("id"),
+                        amount: { asset_id: sendAsset.get("id"), amount: 0.00001 }
+                    });
 
-                tr.propose({
-                    fee_paying_account: teacherAccount.get("id")
-                });
+                    tr.propose({
+                        fee_paying_account: teacherAccount.get("id")
+                    });
 
-                tr.set_required_fees().then(function () {
-                    tr.add_signer(_this2.account.privateKey, _this2.account.privateKey.toPublicKey().toPublicKeyString());
-                    console.log("serialized transaction:", tr.serialize());
-                    tr.broadcast();
-                });
+                    tr.set_required_fees().then(function () {
+                        tr.add_signer(_this2.account.privateKey, _this2.account.privateKey.toPublicKey().toPublicKeyString());
+                        tr.broadcast().catch(reject);
+                        resolve(tr.serialize());
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -180,8 +184,8 @@ var TeacherApi = (_class = function () {
                         }
 
                         resolve(studentApplications);
-                    });
-                });
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -333,9 +337,9 @@ var TeacherApi = (_class = function () {
                             }
 
                             resolve(applications);
-                        });
-                    });
-                });
+                        }).catch(reject);
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -343,28 +347,30 @@ var TeacherApi = (_class = function () {
         value: function acceptApplication(lectureApplicationId) {
             var _this3 = this;
 
-            return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", this.feeAsset)]).then(function (res) {
-                var _res5 = _slicedToArray(res, 2),
-                    teacherAccount = _res5[0],
-                    feeAsset = _res5[1];
+            return new Promise(function (resolve, reject) {
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _this3.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _this3.feeAsset)]).then(function (res) {
+                    var _res5 = _slicedToArray(res, 2),
+                        teacherAccount = _res5[0],
+                        feeAsset = _res5[1];
 
-                var tr = new _bitsharesjs.TransactionBuilder();
+                    var tr = new _bitsharesjs.TransactionBuilder();
 
-                tr.add_type_operation("proposal_update_operation", {
-                    fee: {
-                        amount: 0,
-                        asset_id: feeAsset.get("id")
-                    },
-                    fee_paying_account: teacherAccount,
-                    proposal: lectureApplicationId,
-                    active_approvals_to_add: [teacherAccount]
-                });
+                    tr.add_type_operation("proposal_update_operation", {
+                        fee: {
+                            amount: 0,
+                            asset_id: feeAsset.get("id")
+                        },
+                        fee_paying_account: teacherAccount,
+                        proposal: lectureApplicationId,
+                        active_approvals_to_add: [teacherAccount]
+                    });
 
-                tr.set_required_fees().then(function () {
-                    tr.add_signer(_this3.account.privateKey, _this3.account.privateKey.toPublicKey().toPublicKeyString());
-                    console.log("serialized transaction:", tr.serialize());
-                    tr.broadcast();
-                });
+                    tr.set_required_fees().then(function () {
+                        tr.add_signer(_this3.account.privateKey, _this3.account.privateKey.toPublicKey().toPublicKeyString());
+                        tr.broadcast().catch(reject);
+                        resolve(tr.serialize());
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }, {
@@ -483,9 +489,9 @@ var TeacherApi = (_class = function () {
                             }
 
                             _this5.__processLectureQueue(teachersLecturesList, 0, resolve);
-                        });
-                    });
-                });
+                        }).catch(reject);
+                    }).catch(reject);
+                }).catch(reject);
             });
         }
     }]);

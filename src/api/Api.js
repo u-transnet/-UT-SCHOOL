@@ -17,7 +17,9 @@ class Api{
         let api = new Api(accountName, privateKey);
         return new Promise((resolved, rejected)=>{
             BlockchainApi.init(nodeUrl).then(()=>{
-                resolved(api);
+                new TransactionBuilder().update_head_block().then(()=>{
+                    resolved(api);
+                })
             });
         });
     }
