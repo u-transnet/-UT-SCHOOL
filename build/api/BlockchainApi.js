@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.command = exports.BlockchainApi = undefined;
+exports.apiCall = exports.BlockchainApi = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       * Created by superpchelka on 23.02.18.
@@ -15,7 +15,7 @@ var _bitsharesjsWs = require("bitsharesjs-ws");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function command(target, key, descriptor) {
+function apiCall(target, key, descriptor) {
     var original = descriptor.value;
     if (typeof original === 'function') descriptor.value = function () {
         var _this = this;
@@ -57,4 +57,4 @@ var BlockchainApi = function () {
 }();
 
 exports.BlockchainApi = BlockchainApi;
-exports.command = command;
+exports.apiCall = apiCall;

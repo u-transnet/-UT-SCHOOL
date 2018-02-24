@@ -5,7 +5,7 @@
 import {ChainStore} from "bitsharesjs";
 import {Apis} from "bitsharesjs-ws";
 
-function command(target, key, descriptor) {
+function apiCall(target, key, descriptor) {
     const original = descriptor.value;
     if (typeof original === 'function')
         descriptor.value = function(...args) {
@@ -35,4 +35,4 @@ class BlockchainApi{
 
 }
 
-export {BlockchainApi, command}
+export {BlockchainApi, apiCall}

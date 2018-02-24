@@ -2,7 +2,7 @@
  * Created by superpchelka on 23.02.18.
  */
 import {ChainStore, FetchChain, TransactionBuilder} from "bitsharesjs";
-import {command} from './BlockchainApi';
+import {apiCall} from './BlockchainApi';
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolToken, utSchoolAccount} from '../common/Configs'
 
@@ -14,7 +14,7 @@ class StudentApi{
         this.feeAsset='bts';
     }
 
-    @command
+    @apiCall
     applyForLecture(lectureAccount){
         return Promise.all([
             FetchChain("getAccount", lectureAccount),
@@ -47,7 +47,7 @@ class StudentApi{
         });
     }
 
-    @command
+    @apiCall
     getLectureState(lectureAccount){
         return new Promise((resolve, reject) => {
             Promise.all([
@@ -82,7 +82,7 @@ class StudentApi{
     }
 
 
-    @command
+    @apiCall
     getLectures(resolve){
         let lecturesList = [];
         return new Promise( (resolve, reject) => {

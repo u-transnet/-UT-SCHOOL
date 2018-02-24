@@ -329,5 +329,5 @@ var StudentApi = (_class = function () {
     }]);
 
     return StudentApi;
-}(), (_applyDecoratedDescriptor(_class.prototype, 'applyForLecture', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'applyForLecture'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureState', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureState'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
+}(), (_applyDecoratedDescriptor(_class.prototype, 'applyForLecture', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'applyForLecture'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureState', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureState'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
 exports.StudentApi = StudentApi;

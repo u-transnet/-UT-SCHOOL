@@ -6,7 +6,7 @@
  * Created by superpchelka on 23.02.18.
  */
 import {FetchChain, TransactionBuilder} from "bitsharesjs";
-import {command} from './BlockchainApi';
+import {apiCall} from './BlockchainApi';
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolToken, utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolAccount} from '../common/Configs'
 
@@ -19,7 +19,7 @@ class TeacherApi{
     }
 
 
-    @command
+    @apiCall
     _sendToken(lectureAccount, studentAccount, token){
         return Promise.all([
             FetchChain("getAccount", lectureAccount),
@@ -57,7 +57,7 @@ class TeacherApi{
     }
 
 
-    @command
+    @apiCall
     requestTeacherRole(){
         return Promise.all([
             FetchChain("getAccount", utSchoolAccount),
@@ -90,7 +90,7 @@ class TeacherApi{
         });
     }
 
-    @command
+    @apiCall
     getLectureParticipants(lectureAccount){
         return new Promise( (resolve, reject) => {
             Promise.all([
@@ -117,7 +117,7 @@ class TeacherApi{
         });
     }
 
-    @command
+    @apiCall
     getLectureApplications(lectureAccount){
         return new Promise( (resolve, reject) => {
             Promise.all([
@@ -189,7 +189,7 @@ class TeacherApi{
         });
     }
 
-    @command
+    @apiCall
     acceptApplication(lectureApplicationId){
         return Promise.all([
             FetchChain("getAccount", this.account.name),
@@ -216,7 +216,7 @@ class TeacherApi{
         });
     }
 
-    @command
+    @apiCall
     getLectureStats(lectureAccount){
         return Promise.all([
             this.getLectureParticipants(lectureAccount),
@@ -238,7 +238,7 @@ class TeacherApi{
         })
     }
 
-    @command
+    @apiCall
     getLectures(){
         return new Promise( (resolve, reject) => {
             Promise.all([
