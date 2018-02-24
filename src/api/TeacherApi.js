@@ -103,15 +103,35 @@ class TeacherApi{
 
 
                 BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then((operations)=>{
-                    let studentApplications = [];
+                    let studentApplicationsIds = [];
                     for(let operation of operations){
                         let transferData=operation.op[1];
                         if(transferData.from == lectureAccount
                             && transferData.amount.asset_id == ticketAsset){
-                            studentApplications.push(transferData.to);
+                            studentApplicationsIds.push(transferData.to);
                         }
                     }
-                    resolve(studentApplications);
+
+
+                    FetchChain('getAccount', studentApplicationsIds).then((accounts)=>{
+                        accounts = accounts.toJS();
+                        let accountsMap = {};
+
+                        for(let account of accounts)
+                            if(account)
+                                accountsMap[account.id] = account;
+
+                        let studentApplications = [];
+                        for(let application of studentApplicationsIds){
+                            let accountData = accountsMap[application];
+                            studentApplications.push({
+                                'id': accountData.id,
+                                'name': accountData.name
+                            });
+                        }
+
+                        resolve(studentApplications);
+                    }).catch(reject);
                 }).catch(reject);
             }).catch(reject);
         });

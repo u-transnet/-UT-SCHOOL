@@ -125,7 +125,7 @@ var StudentApi = (_class = function () {
                             assetsMap[asset.get('id')] = {
                                 'id': asset.get('id'),
                                 'symbol': asset.get('symbol'),
-                                'received': false,
+                                'accepted': false,
                                 'balance': _bitsharesjs.ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
                             };
                         }
@@ -155,7 +155,7 @@ var StudentApi = (_class = function () {
 
                                 var transferData = operation.op[1];
                                 if (transferData.from == lectureAccountId && transferData.to == studentAccountId && assetsMap[transferData.amount.asset_id]) {
-                                    assetsMap[transferData.amount.asset_id].received = true;
+                                    assetsMap[transferData.amount.asset_id].accepted = true;
                                 }
                             }
                         } catch (err) {
