@@ -35,6 +35,12 @@ class Api{
     }
 
 
+    /**
+     * @desc register user by login, password
+     * @param login - name of the new bitshares account
+     * @param password
+     * @return serialized transaction
+     */
     @apiCall
     register(
         login,
@@ -83,6 +89,7 @@ class Api{
                 tr.set_required_fees().then(() => {
                     console.log("serialized transaction:", tr.serialize());
                     tr.broadcast();
+                    resolve(tr.serialize());
                 });
             });
         });

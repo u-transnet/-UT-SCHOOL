@@ -11,6 +11,18 @@ let op_history   = parseInt(object_type.operation_history, 10);
 
 class BitsharesApiExtends{
 
+
+    /**
+     * @desc internal method for iterating through all operations history
+     * @param account - id of the bitshares account
+     * @param limit - results per butch (max 100)
+     * @param opType - operation type id for filtering
+     * @param stop - recent operation id
+     * @param start - first operation id
+     * @param operationsList - list of already fetched operations
+     * @return list of operations like FetchRecentHistory from bitsharesjs
+     * @private
+     */
     static _fetchHistory(account, limit = 100, opType, stop, start, operationsList){
         if(typeof stop === 'undefined')
             stop = "1." + op_history + ".0";
@@ -27,13 +39,23 @@ class BitsharesApiExtends{
                     }
 
                     if(operations.length == limit)
-                        this._fetchHistory(account, limit, opType, undefined, operations[0].id, operationsList);
+                        this._fetchHistory(account, limit, opType, undefined, operations[0].id, operationsList).then(resolve, reject);
                     else
                         resolve(operationsList);
                 });
         });
     }
 
+    /**
+     * @desc collect all history of the account
+     * @param account - id of the bitshares account
+     * @param limit - results per butch (max 100)
+     * @param opTypeName - operation type for filtering
+     * @param stop - recent operation id
+     * @param start - first operation id
+     * @return list of operations like FetchRecentHistory from bitsharesjs
+     * @private
+     */
     static fetchHistory(account, limit = 100, opTypeName, stop, start)
     {
         // console.log( "get account history: ", account )
