@@ -140,12 +140,15 @@ class TeacherApi{
 
                     let accountIds = [];
                     for(let proposal of proposals){
+                        if(Date.parse(proposal.proposed_transaction.expiration) < new Date()/1000)
+                            continue;
                         let operations = proposal.proposed_transaction.operations;
                         let acceptedOperation;
                         for(let operation of operations){
                             let operationData = operation[1];
                             if(operationData.amount.asset_id == ticketAsset
-                                && operationData.from == lectureAccountId) {
+                                && operationData.from == lectureAccountId
+                            ) {
                                 acceptedOperation = operationData;
                                 break;
                             }

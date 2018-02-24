@@ -219,6 +219,7 @@ var TeacherApi = (_class = function () {
                             for (var _iterator2 = proposals[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                                 var proposal = _step2.value;
 
+                                if (Date.parse(proposal.proposed_transaction.expiration) < new Date() / 1000) continue;
                                 var operations = proposal.proposed_transaction.operations;
                                 var acceptedOperation = void 0;
                                 var _iteratorNormalCompletion5 = true;
