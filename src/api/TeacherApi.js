@@ -190,6 +190,33 @@ class TeacherApi{
     }
 
     @command
+    acceptApplication(lectureApplicationId){
+        return Promise.all([
+            FetchChain("getAccount", this.account.name),
+            FetchChain("getAsset", this.feeAsset)
+        ]).then((res)=> {
+            let [teacherAccount, feeAsset] = res;
+            let tr = new TransactionBuilder();
+
+            tr.add_type_operation("proposal_update_operation", {
+                fee: {
+                    amount: 0,
+                    asset_id: feeAsset.get("id")
+                },
+                fee_paying_account: teacherAccount,
+                proposal: lectureApplicationId,
+                active_approvals_to_add: [teacherAccount],
+            } );
+
+            tr.set_required_fees().then(() => {
+                tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
+                console.log("serialized transaction:", tr.serialize());
+                tr.broadcast()
+            });
+        });
+    }
+
+    @command
     getLectureStats(lectureAccount){
         return Promise.all([
             this.getLectureParticipants(lectureAccount),

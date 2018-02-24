@@ -343,6 +343,35 @@ var TeacherApi = (_class = function () {
             });
         }
     }, {
+        key: 'acceptApplication',
+        value: function acceptApplication(lectureApplicationId) {
+            var _this3 = this;
+
+            return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", this.feeAsset)]).then(function (res) {
+                var _res5 = _slicedToArray(res, 2),
+                    teacherAccount = _res5[0],
+                    feeAsset = _res5[1];
+
+                var tr = new _bitsharesjs.TransactionBuilder();
+
+                tr.add_type_operation("proposal_update_operation", {
+                    fee: {
+                        amount: 0,
+                        asset_id: feeAsset.get("id")
+                    },
+                    fee_paying_account: teacherAccount,
+                    proposal: lectureApplicationId,
+                    active_approvals_to_add: [teacherAccount]
+                });
+
+                tr.set_required_fees().then(function () {
+                    tr.add_signer(_this3.account.privateKey, _this3.account.privateKey.toPublicKey().toPublicKeyString());
+                    console.log("serialized transaction:", tr.serialize());
+                    tr.broadcast();
+                });
+            });
+        }
+    }, {
         key: 'getLectureStats',
         value: function getLectureStats(lectureAccount) {
             return Promise.all([this.getLectureParticipants(lectureAccount), this.getLectureApplications(lectureAccount)]);
@@ -350,34 +379,34 @@ var TeacherApi = (_class = function () {
     }, {
         key: '__processLectureQueue',
         value: function __processLectureQueue(lectures, index, onFinish) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (index >= lectures.length) {
                 onFinish(lectures);
                 return;
             }
             this.getLectureStats(lectures[index].name).then(function (res) {
-                var _res5 = _slicedToArray(res, 2),
-                    participants = _res5[0],
-                    applications = _res5[1];
+                var _res6 = _slicedToArray(res, 2),
+                    participants = _res6[0],
+                    applications = _res6[1];
 
                 lectures[index].participants = participants;
                 lectures[index].applications = applications;
 
-                _this3.__processLectureQueue(lectures, index + 1, onFinish);
+                _this4.__processLectureQueue(lectures, index + 1, onFinish);
             });
         }
     }, {
         key: 'getLectures',
         value: function getLectures() {
-            var _this4 = this;
+            var _this5 = this;
 
             return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this4.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
-                    var _res6 = _slicedToArray(res, 3),
-                        utSchoolAccount = _res6[0],
-                        teacherAccount = _res6[1],
-                        utSchoolAsset = _res6[2];
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this5.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
+                    var _res7 = _slicedToArray(res, 3),
+                        utSchoolAccount = _res7[0],
+                        teacherAccount = _res7[1],
+                        utSchoolAsset = _res7[2];
 
                     utSchoolAccount = utSchoolAccount.get('id');
                     teacherAccount = teacherAccount.get('id');
@@ -457,7 +486,7 @@ var TeacherApi = (_class = function () {
                                 return;
                             }
 
-                            _this4.__processLectureQueue(teachersLecturesList, 0, resolve);
+                            _this5.__processLectureQueue(teachersLecturesList, 0, resolve);
                         });
                     });
                 });
@@ -466,5 +495,5 @@ var TeacherApi = (_class = function () {
     }]);
 
     return TeacherApi;
-}(), (_applyDecoratedDescriptor(_class.prototype, '_sendToken', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, '_sendToken'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'requestTeacherRole', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'requestTeacherRole'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureParticipants', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureParticipants'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureApplications', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureApplications'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureStats', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureStats'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
+}(), (_applyDecoratedDescriptor(_class.prototype, '_sendToken', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, '_sendToken'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'requestTeacherRole', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'requestTeacherRole'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureParticipants', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureParticipants'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureApplications', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureApplications'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'acceptApplication', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'acceptApplication'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureStats', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureStats'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.command], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
 exports.TeacherApi = TeacherApi;
