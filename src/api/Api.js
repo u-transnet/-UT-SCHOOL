@@ -5,7 +5,7 @@
 import {Account} from '../common/Account'
 import {StudentApi} from "./StudentApi";
 import {TeacherApi} from "./TeacherApi";
-import {BlockchainApi, apiCall} from "./BlockchainApi"
+import {BlockchainApi} from "./BlockchainApi"
 import {FetchChain, TransactionBuilder, ChainValidation, Login} from "bitsharesjs";
 import {utSchoolFaucet} from "../common/Configs"
 
@@ -16,11 +16,7 @@ class Api{
     static init(nodeUrl, accountName, privateKey){
         let api = new Api(accountName, privateKey);
         return new Promise((resolved, rejected)=>{
-            BlockchainApi.init(nodeUrl).then(()=>{
-                new TransactionBuilder().update_head_block().then(()=>{
-                    resolved(api);
-                })
-            });
+            BlockchainApi.init(nodeUrl).then(()=>resolved(api)).catch(rejected);
         });
     }
 
@@ -41,7 +37,6 @@ class Api{
      * @param password
      * @return serialized transaction
      */
-    @apiCall
     register(
         login,
         password,

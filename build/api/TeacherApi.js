@@ -7,16 +7,12 @@ exports.TeacherApi = undefined;
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _desc, _value, _class; /**
-                            * Created by superpchelka on 23.02.18.
-                            */
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by superpchelka on 23.02.18.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
 var _bitsharesjs = require('bitsharesjs');
-
-var _BlockchainApi = require('./BlockchainApi');
 
 var _BitsharesApiExtends = require('./BitsharesApiExtends');
 
@@ -24,36 +20,7 @@ var _Configs = require('../common/Configs');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
-    var desc = {};
-    Object['ke' + 'ys'](descriptor).forEach(function (key) {
-        desc[key] = descriptor[key];
-    });
-    desc.enumerable = !!desc.enumerable;
-    desc.configurable = !!desc.configurable;
-
-    if ('value' in desc || desc.initializer) {
-        desc.writable = true;
-    }
-
-    desc = decorators.slice().reverse().reduce(function (desc, decorator) {
-        return decorator(target, property, desc) || desc;
-    }, desc);
-
-    if (context && desc.initializer !== void 0) {
-        desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
-        desc.initializer = undefined;
-    }
-
-    if (desc.initializer === void 0) {
-        Object['define' + 'Property'](target, property, desc);
-        desc = null;
-    }
-
-    return desc;
-}
-
-var TeacherApi = (_class = function () {
+var TeacherApi = function () {
     function TeacherApi(account) {
         _classCallCheck(this, TeacherApi);
 
@@ -650,5 +617,6 @@ var TeacherApi = (_class = function () {
     }]);
 
     return TeacherApi;
-}(), (_applyDecoratedDescriptor(_class.prototype, '_sendToken', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, '_sendToken'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'requestTeacherRole', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'requestTeacherRole'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureParticipants', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureParticipants'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureApplications', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureApplications'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'acceptApplication', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'acceptApplication'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureStats', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureStats'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
+}();
+
 exports.TeacherApi = TeacherApi;

@@ -2,7 +2,6 @@
  * Created by superpchelka on 23.02.18.
  */
 import {FetchChain, TransactionBuilder} from "bitsharesjs";
-import {apiCall} from './BlockchainApi';
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolToken, utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolAccount} from '../common/Configs'
 
@@ -21,7 +20,6 @@ class TeacherApi{
      * @param educationToken - name of the bitshares education token
      * @return serialized transaction
      */
-    @apiCall
     _sendToken(lectureAccount, studentAccount, educationToken){
         return new Promise((resolve, reject)=>{
             Promise.all([
@@ -77,7 +75,6 @@ class TeacherApi{
      * @desc request teacher role for current bitshares account
      * @return serialized proposal transaction
      */
-    @apiCall
     requestTeacherRole(){
         return new Promise((resolve, reject)=>{
             Promise.all([
@@ -121,7 +118,6 @@ class TeacherApi{
      *      name
      * }
      */
-    @apiCall
     getLectureParticipants(lectureAccount){
         return new Promise( (resolve, reject) => {
             Promise.all([
@@ -180,7 +176,6 @@ class TeacherApi{
      *      }
      * }
      */
-    @apiCall
     getLectureApplications(lectureAccount){
         return new Promise( (resolve, reject) => {
             Promise.all([
@@ -260,7 +255,6 @@ class TeacherApi{
      * @param lectureApplicationId - id of the proposal for application for the lecture
      * @return serialized transaction
      */
-    @apiCall
     acceptApplication(lectureApplicationId){
         return new Promise((resolve, reject)=>{
             Promise.all([
@@ -295,7 +289,6 @@ class TeacherApi{
      * @param lectureAccount - name of the bitshares lecture accout
      * @return pair of results from getLectureParticipants and getLectureApplications
      */
-    @apiCall
     getLectureStats(lectureAccount){
         return Promise.all([
             this.getLectureParticipants(lectureAccount),
@@ -334,7 +327,6 @@ class TeacherApi{
      *      applications - result of getLectureApplications
      * }
      */
-    @apiCall
     getLectures(){
         return new Promise( (resolve, reject) => {
             Promise.all([

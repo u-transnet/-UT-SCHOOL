@@ -26,6 +26,19 @@ var BitsharesApiExtends = function () {
 
     _createClass(BitsharesApiExtends, null, [{
         key: "_fetchHistory",
+
+
+        /**
+         * @desc internal method for iterating through all operations history
+         * @param account - id of the bitshares account
+         * @param limit - results per butch (max 100)
+         * @param opType - operation type id for filtering
+         * @param stop - recent operation id
+         * @param start - first operation id
+         * @param operationsList - list of already fetched operations
+         * @return list of operations like FetchRecentHistory from bitsharesjs
+         * @private
+         */
         value: function _fetchHistory(account) {
             var limit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
             var opType = arguments[2];
@@ -66,10 +79,21 @@ var BitsharesApiExtends = function () {
                         }
                     }
 
-                    if (operations.length == limit) _this._fetchHistory(account, limit, opType, undefined, operations[0].id, operationsList);else resolve(operationsList);
+                    if (operations.length == limit) _this._fetchHistory(account, limit, opType, undefined, operations[0].id, operationsList).then(resolve, reject);else resolve(operationsList);
                 });
             });
         }
+
+        /**
+         * @desc collect all history of the account
+         * @param account - id of the bitshares account
+         * @param limit - results per butch (max 100)
+         * @param opTypeName - operation type for filtering
+         * @param stop - recent operation id
+         * @param start - first operation id
+         * @return list of operations like FetchRecentHistory from bitsharesjs
+         */
+
     }, {
         key: "fetchHistory",
         value: function fetchHistory(account) {

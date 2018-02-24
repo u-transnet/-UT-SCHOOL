@@ -2,7 +2,6 @@
  * Created by superpchelka on 23.02.18.
  */
 import {ChainStore, FetchChain, TransactionBuilder} from "bitsharesjs";
-import {apiCall} from './BlockchainApi';
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolToken, utSchoolAccount} from '../common/Configs'
 
@@ -20,7 +19,6 @@ class StudentApi{
      * @param lectureAccount - name of the bitshares lecture account
      * @return serialized transaction
      */
-    @apiCall
     applyForLecture(lectureAccount){
         return new Promise((resolve, reject) => {
             Promise.all([
@@ -66,7 +64,6 @@ class StudentApi{
      *      balance - balance of the particular token on the account
      * }
      */
-    @apiCall
     getLectureStats(lectureAccount){
         return new Promise((resolve, reject) => {
             Promise.all([
@@ -115,7 +112,6 @@ class StudentApi{
      *      stats - result from getLectureStats
      * }
      */
-    @apiCall
     getLectures(){
         let lecturesList = [];
         return new Promise( (resolve, reject) => {

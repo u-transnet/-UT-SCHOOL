@@ -54,7 +54,6 @@ class BitsharesApiExtends{
      * @param stop - recent operation id
      * @param start - first operation id
      * @return list of operations like FetchRecentHistory from bitsharesjs
-     * @private
      */
     static fetchHistory(account, limit = 100, opTypeName, stop, start)
     {
