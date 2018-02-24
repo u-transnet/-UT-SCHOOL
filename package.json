@@ -2,7 +2,7 @@
   "name": "schoolapi",
   "version": "1.0.0",
   "description": "API for blockchain UT-SCHOOL demo",
-  "main": "index.js",
+  "main": "build/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,7 +22,11 @@
     "cli": "^1.0.1",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
-    "gulp-concat": "^2.6.1"
+    "gulp-concat-js": "^0.1.0",
+    "gulp-plumber": "^1.2.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify": "^3.0.0"
   },
   "dependencies": {
     "bitsharesjs": "^1.4.4",
