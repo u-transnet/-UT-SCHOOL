@@ -13,11 +13,31 @@ import {utSchoolFaucet} from "../common/Configs"
 class Api{
 
 
+    /**
+     * @desc initialize api for interacting with blockchain
+     * @param nodeUrl - url of node for connection
+     * @param accountName - name of bitshares account
+     * @param [privateKey] - private of bitshares account (optional)
+     * @return api object
+     */
     static init(nodeUrl, accountName, privateKey){
         let api = new Api(accountName, privateKey);
         return new Promise((resolved, rejected)=>{
             BlockchainApi.init(nodeUrl).then(()=>resolved(api)).catch(rejected);
         });
+    }
+
+    /**
+     * @desc generate public keys and private keys by login and password
+     * @param login - login of the bitshares account
+     * @param password - password of the bitshares account
+     * @return Object{
+     *      pubKeys: {active, owner, memo},
+     *      privKeys: {active, owner, memo}
+     * }
+     */
+    static generateKeys(login, password){
+        return Login.generateKeys(login, password)
     }
 
     constructor(accountName, privateKey){
@@ -26,10 +46,13 @@ class Api{
         this.teacherApi=new TeacherApi(this.account);
     }
 
-    generateKeys(login, password){
-       return Login.generateKeys(login, password)
+    /**
+     * @desc set private key of current user
+     * @param privateKey - private key
+     */
+    setPrivateKey(privateKey){
+        this.account.privateKey = privateKey;
     }
-
 
     /**
      * @desc register user by login, password
@@ -44,7 +67,7 @@ class Api{
 
         ChainValidation.required(utSchoolFaucet, "registrar_id");
 
-        let keys = this.generateKeys(login, password);
+        let keys = Api.generateKeys(login, password);
 
         return new Promise((resolve, reject) => {
             return Promise.all([

@@ -104,6 +104,27 @@
 
     //// BEGIN ORIGINAL SOURCE
 
+    // BEGIN FILE ./cli.js
+    require.register("./cli.js", function (module, exports, require) {
+
+'use strict';
+
+var _Api = require('./cli/Api');
+
+var _commander = require('commander');
+
+var _commander2 = _interopRequireDefault(_commander);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Created by superpchelka on 24.02.18.
+ */
+
+_commander2.default.version('1.0.0').option('-l, --login', 'login of your bitshares account').option('-p, --password', 'password of your bitshares account').option('-pvk, --private-key', 'private key of your bitshares account').parse(process.argv);
+    });
+    // END FILE
+
     // BEGIN FILE ./main.js
     require.register("./main.js", function (module, exports, require) {
 
@@ -154,6 +175,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Api = function () {
     _createClass(Api, null, [{
         key: "init",
+
+
+        /**
+         * @desc initialize api for interacting with blockchain
+         * @param nodeUrl - url of node for connection
+         * @param accountName - name of bitshares account
+         * @param privateKey - private of bitshares account
+         * @return api object
+         */
         value: function init(nodeUrl, accountName, privateKey) {
             var api = new Api(accountName, privateKey);
             return new Promise(function (resolved, rejected) {
@@ -161,6 +191,22 @@ var Api = function () {
                     return resolved(api);
                 }).catch(rejected);
             });
+        }
+
+        /**
+         * @desc generate public keys and private keys by login and password
+         * @param login - login of the bitshares account
+         * @param password - password of the bitshares account
+         * @return Object{
+         *      pubKeys: {active, owner, memo},
+         *      privKeys: {active, owner, memo}
+         * }
+         */
+
+    }, {
+        key: "generateKeys",
+        value: function generateKeys(login, password) {
+            return _bitsharesjs.Login.generateKeys(login, password);
         }
     }]);
 
@@ -172,10 +218,16 @@ var Api = function () {
         this.teacherApi = new _TeacherApi.TeacherApi(this.account);
     }
 
+    /**
+     * @desc set private key of current user
+     * @param privateKey - private key
+     */
+
+
     _createClass(Api, [{
-        key: "generateKeys",
-        value: function generateKeys(login, password) {
-            return _bitsharesjs.Login.generateKeys(login, password);
+        key: "setPrivateKey",
+        value: function setPrivateKey(privateKey) {
+            this.account.privateKey = privateKey;
         }
 
         /**
@@ -191,7 +243,7 @@ var Api = function () {
 
             _bitsharesjs.ChainValidation.required(_Configs.utSchoolFaucet, "registrar_id");
 
-            var keys = this.generateKeys(login, password);
+            var keys = Api.generateKeys(login, password);
 
             return new Promise(function (resolve, reject) {
                 return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolFaucet)]).then(function (res) {
@@ -1393,6 +1445,36 @@ var TeacherApi = function () {
 }();
 
 exports.TeacherApi = TeacherApi;
+    });
+    // END FILE
+
+    // BEGIN FILE ./cli/Api.js
+    require.register("./cli/Api.js", function (module, exports, require) {
+
+/**
+ * Created by superpchelka on 24.02.18.
+ */
+"use strict";
+    });
+    // END FILE
+
+    // BEGIN FILE ./cli/StudentApi.js
+    require.register("./cli/StudentApi.js", function (module, exports, require) {
+
+/**
+ * Created by superpchelka on 24.02.18.
+ */
+"use strict";
+    });
+    // END FILE
+
+    // BEGIN FILE ./cli/TeacherApi.js
+    require.register("./cli/TeacherApi.js", function (module, exports, require) {
+
+/**
+ * Created by superpchelka on 24.02.18.
+ */
+"use strict";
     });
     // END FILE
 
