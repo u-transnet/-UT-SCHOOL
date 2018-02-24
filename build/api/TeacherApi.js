@@ -13,10 +13,6 @@ var _desc, _value, _class; /**
                             * Created by superpchelka on 23.02.18.
                             */
 
-/**
- * Created by superpchelka on 23.02.18.
- */
-
 
 var _bitsharesjs = require('bitsharesjs');
 

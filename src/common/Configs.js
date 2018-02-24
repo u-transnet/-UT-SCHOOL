@@ -8,8 +8,9 @@ let utSchoolTokenSession = utSchoolToken+'.SESSION';
 let utSchoolTokenGrade = utSchoolToken+'.GRADE';
 
 let utSchoolAccount='ut-school';
+let utSchoolFaucet='u-tech-faucet';
 
 
 
 
-export {utSchoolToken, utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolAccount}
+export {utSchoolToken, utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolAccount, utSchoolFaucet}

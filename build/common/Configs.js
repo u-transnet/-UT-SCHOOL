@@ -13,9 +13,11 @@ var utSchoolTokenSession = utSchoolToken + '.SESSION';
 var utSchoolTokenGrade = utSchoolToken + '.GRADE';
 
 var utSchoolAccount = 'ut-school';
+var utSchoolFaucet = 'u-tech-faucet';
 
 exports.utSchoolToken = utSchoolToken;
 exports.utSchoolTokenTicket = utSchoolTokenTicket;
 exports.utSchoolTokenSession = utSchoolTokenSession;
 exports.utSchoolTokenGrade = utSchoolTokenGrade;
 exports.utSchoolAccount = utSchoolAccount;
+exports.utSchoolFaucet = utSchoolFaucet;

@@ -1,10 +1,6 @@
 /**
  * Created by superpchelka on 23.02.18.
  */
-
-/**
- * Created by superpchelka on 23.02.18.
- */
 import {FetchChain, TransactionBuilder} from "bitsharesjs";
 import {apiCall} from './BlockchainApi';
 import {BitsharesApiExtends} from './BitsharesApiExtends'
