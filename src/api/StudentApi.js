@@ -15,6 +15,11 @@ class StudentApi{
         this.feeAsset='BTS';
     }
 
+    /**
+     * @desc apply current user for the lecture
+     * @param lectureAccount - name of the bitshares lecture account
+     * @return serialized transaction
+     */
     @apiCall
     applyForLecture(lectureAccount){
         return new Promise((resolve, reject) => {
@@ -50,8 +55,19 @@ class StudentApi{
         });
     }
 
+    /**
+     * @desc collect information about lecture
+     * @param lectureAccount - name of the bitshares lecture account
+     * @return return map of stats by tokens UTSchoolTokenTicket, UTSchoolTokenSession, UTSchoolTokenGrade
+     * stat: {
+     *      id - id of the token,
+     *      symbol - name of the token
+     *      accepted - use was accepted to lecture
+     *      balance - balance of the particular token on the account
+     * }
+     */
     @apiCall
-    getLectureState(lectureAccount){
+    getLectureStats(lectureAccount){
         return new Promise((resolve, reject) => {
             Promise.all([
                 FetchChain("getAccount", lectureAccount),
@@ -86,6 +102,19 @@ class StudentApi{
         });
     }
 
+    /**
+     * @desc return all available lectures for current user
+     * @return list of lectures
+     * lecture: {
+     *      id - id of the bitshares lecture account
+     *      name - name of the bitshares lecture account
+     *      teacher: {
+     *          id - id of the bitshares teacher account
+     *          name - id of the bitshares teacher account
+     *      }
+     *      stats - result from getLectureStats
+     * }
+     */
     @apiCall
     getLectures(){
         let lecturesList = [];
@@ -137,12 +166,12 @@ class StudentApi{
                             let lectureStatePromiseList = [];
                             for(let lecture of lecturesList) {
                                 lecture.teacher.name = teachersMap[lecture.teacher.id].name;
-                                lectureStatePromiseList.push(this.getLectureState(lecture.name));
+                                lectureStatePromiseList.push(this.getLectureStats(lecture.name));
                             }
 
                             Promise.all(lectureStatePromiseList).then((lecturesStates)=>{
                                 for(let i=0;i<lecturesList.length;i++)
-                                    lecturesList[i].states = lecturesStates[i];
+                                    lecturesList[i].stats = lecturesStates[i];
 
                                 resolve(lecturesList);
                             }).catch(reject);

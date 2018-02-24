@@ -61,6 +61,13 @@ var StudentApi = (_class = function () {
         this.feeAsset = 'BTS';
     }
 
+    /**
+     * @desc apply current user for the lecture
+     * @param lectureAccount - name of the bitshares lecture account
+     * @return serialized transaction
+     */
+
+
     _createClass(StudentApi, [{
         key: 'applyForLecture',
         value: function applyForLecture(lectureAccount) {
@@ -98,8 +105,21 @@ var StudentApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc collect information about lecture
+         * @param lectureAccount - name of the bitshares lecture account
+         * @return return map of stats by tokens UTSchoolTokenTicket, UTSchoolTokenSession, UTSchoolTokenGrade
+         * stat: {
+         *      id - id of the token,
+         *      symbol - name of the token
+         *      accepted - use was accepted to lecture
+         *      balance - balance of the particular token on the account
+         * }
+         */
+
     }, {
-        key: 'getLectureState',
+        key: 'getLectureStats',
         value: function getLectureState(lectureAccount) {
             var _this2 = this;
 
@@ -178,6 +198,20 @@ var StudentApi = (_class = function () {
                 }).catch(reject);
             });
         }
+
+        /**
+         * @desc return all available lectures for current user
+         * @return list of lectures
+         * lecture: {
+         *      id - id of the bitshares lecture account
+         *      name - name of the bitshares lecture account
+         *      teacher: {
+         *          id - id of the bitshares teacher account
+         *          name - id of the bitshares teacher account
+         *      }
+         * }
+         */
+
     }, {
         key: 'getLectures',
         value: function getLectures() {
@@ -302,7 +336,7 @@ var StudentApi = (_class = function () {
                                         var lecture = _step6.value;
 
                                         lecture.teacher.name = teachersMap[lecture.teacher.id].name;
-                                        lectureStatePromiseList.push(_this3.getLectureState(lecture.name));
+                                        lectureStatePromiseList.push(_this3.getLectureStats(lecture.name));
                                     }
                                 } catch (err) {
                                     _didIteratorError6 = true;
@@ -321,7 +355,7 @@ var StudentApi = (_class = function () {
 
                                 Promise.all(lectureStatePromiseList).then(function (lecturesStates) {
                                     for (var i = 0; i < lecturesList.length; i++) {
-                                        lecturesList[i].states = lecturesStates[i];
+                                        lecturesList[i].stats = lecturesStates[i];
                                     }resolve(lecturesList);
                                 }).catch(reject);
                             }).catch(reject);
@@ -333,5 +367,5 @@ var StudentApi = (_class = function () {
     }]);
 
     return StudentApi;
-}(), (_applyDecoratedDescriptor(_class.prototype, 'applyForLecture', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'applyForLecture'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureState', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureState'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
+}(), (_applyDecoratedDescriptor(_class.prototype, 'applyForLecture', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'applyForLecture'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectureStats', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectureStats'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'getLectures', [_BlockchainApi.apiCall], Object.getOwnPropertyDescriptor(_class.prototype, 'getLectures'), _class.prototype)), _class);
 exports.StudentApi = StudentApi;

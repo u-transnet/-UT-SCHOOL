@@ -542,7 +542,13 @@ var TeacherApi = (_class = function () {
 
         /**
          * @desc collect all lectures of the current user
-         * @return {Promise}
+         * @return list of lectures
+         * lecture: {
+         *      id,
+         *      name,
+         *      participants - result of getLectureParticipants
+         *      applications - result of getLectureApplications
+         * }
          */
 
     }, {
