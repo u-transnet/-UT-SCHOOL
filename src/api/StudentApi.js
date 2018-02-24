@@ -56,23 +56,25 @@ class StudentApi{
                 FetchChain("getAsset", [utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade])
             ]).then((res)=> {
                 let [lectureAccount, studentAccount, assets] = res;
-                lectureAccount = lectureAccount.get('id');
-                studentAccount = studentAccount.get('id');
+                let lectureAccountId = lectureAccount.get('id');
+                let studentAccountId = studentAccount.get('id');
 
                 let assetsMap = {};
                 for(let asset of assets)
                     assetsMap[asset.get('id')] = {
                         'id': asset.get('id'),
-                        'symbol': asset.get('symbol')
+                        'symbol': asset.get('symbol'),
+                        'received': false,
+                        'balance': ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
                     };
 
-                BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then((operations)=>{
+                BitsharesApiExtends.fetchHistory(lectureAccountId, 100, 'transfer').then((operations)=>{
                     for(let operation of operations){
                         let transferData=operation.op[1];
-                        if(transferData.from == lectureAccount
-                            && transferData.to == studentAccount
+                        if(transferData.from == lectureAccountId
+                            && transferData.to == studentAccountId
                             && assetsMap[transferData.amount.asset_id]){
-                            assetsMap[transferData.amount.asset_id].exists = true;
+                            assetsMap[transferData.amount.asset_id].received = true;
                         }
                     }
                     resolve(assetsMap);
@@ -81,9 +83,8 @@ class StudentApi{
         });
     }
 
-
     @apiCall
-    getLectures(resolve){
+    getLectures(){
         let lecturesList = [];
         return new Promise( (resolve, reject) => {
             Promise.all([
@@ -130,13 +131,13 @@ class StudentApi{
                             for(let teacher of teachers)
                                 teachersMap[teacher.id] = teacher;
 
-                            let lecturePromiseList = [];
+                            let lectureStatePromiseList = [];
                             for(let lecture of lecturesList) {
                                 lecture.teacher.name = teachersMap[lecture.teacher.id].name;
-                                lecturePromiseList.push(this.getLectureState(lecture.name))
+                                lectureStatePromiseList.push(this.getLectureState(lecture.name));
                             }
 
-                            Promise.all(lecturePromiseList).then((lecturesStates)=>{
+                            Promise.all(lectureStatePromiseList).then((lecturesStates)=>{
                                 for(let i=0;i<lecturesList.length;i++)
                                     lecturesList[i].states = lecturesStates[i];
 

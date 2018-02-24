@@ -108,8 +108,8 @@ var StudentApi = (_class = function () {
                         studentAccount = _res2[1],
                         assets = _res2[2];
 
-                    lectureAccount = lectureAccount.get('id');
-                    studentAccount = studentAccount.get('id');
+                    var lectureAccountId = lectureAccount.get('id');
+                    var studentAccountId = studentAccount.get('id');
 
                     var assetsMap = {};
                     var _iteratorNormalCompletion = true;
@@ -122,7 +122,9 @@ var StudentApi = (_class = function () {
 
                             assetsMap[asset.get('id')] = {
                                 'id': asset.get('id'),
-                                'symbol': asset.get('symbol')
+                                'symbol': asset.get('symbol'),
+                                'received': false,
+                                'balance': _bitsharesjs.ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
                             };
                         }
                     } catch (err) {
@@ -140,7 +142,7 @@ var StudentApi = (_class = function () {
                         }
                     }
 
-                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then(function (operations) {
+                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(lectureAccountId, 100, 'transfer').then(function (operations) {
                         var _iteratorNormalCompletion2 = true;
                         var _didIteratorError2 = false;
                         var _iteratorError2 = undefined;
@@ -150,8 +152,8 @@ var StudentApi = (_class = function () {
                                 var operation = _step2.value;
 
                                 var transferData = operation.op[1];
-                                if (transferData.from == lectureAccount && transferData.to == studentAccount && assetsMap[transferData.amount.asset_id]) {
-                                    assetsMap[transferData.amount.asset_id].exists = true;
+                                if (transferData.from == lectureAccountId && transferData.to == studentAccountId && assetsMap[transferData.amount.asset_id]) {
+                                    assetsMap[transferData.amount.asset_id].received = true;
                                 }
                             }
                         } catch (err) {
@@ -176,7 +178,7 @@ var StudentApi = (_class = function () {
         }
     }, {
         key: 'getLectures',
-        value: function getLectures(resolve) {
+        value: function getLectures() {
             var _this3 = this;
 
             var lecturesList = [];
@@ -288,7 +290,7 @@ var StudentApi = (_class = function () {
                                     }
                                 }
 
-                                var lecturePromiseList = [];
+                                var lectureStatePromiseList = [];
                                 var _iteratorNormalCompletion6 = true;
                                 var _didIteratorError6 = false;
                                 var _iteratorError6 = undefined;
@@ -298,7 +300,7 @@ var StudentApi = (_class = function () {
                                         var lecture = _step6.value;
 
                                         lecture.teacher.name = teachersMap[lecture.teacher.id].name;
-                                        lecturePromiseList.push(_this3.getLectureState(lecture.name));
+                                        lectureStatePromiseList.push(_this3.getLectureState(lecture.name));
                                     }
                                 } catch (err) {
                                     _didIteratorError6 = true;
@@ -315,7 +317,7 @@ var StudentApi = (_class = function () {
                                     }
                                 }
 
-                                Promise.all(lecturePromiseList).then(function (lecturesStates) {
+                                Promise.all(lectureStatePromiseList).then(function (lecturesStates) {
                                     for (var i = 0; i < lecturesList.length; i++) {
                                         lecturesList[i].states = lecturesStates[i];
                                     }resolve(lecturesList);
