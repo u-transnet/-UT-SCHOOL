@@ -4,7 +4,7 @@
 import {FetchChain, TransactionBuilder} from "bitsharesjs";
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolToken, utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolAccount} from '../common/Configs'
-
+import assert from "assert";
 
 class TeacherApi{
 
@@ -28,17 +28,23 @@ class TeacherApi{
                 FetchChain("getAsset", educationToken),
                 FetchChain("getAsset", this.feeAsset)
             ]).then((res)=> {
-                let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
+                let [cLectureAccount, cStudentAccount, cEducationToken, cFeeAsset] = res;
+
+                assert(cLectureAccount !== null, `Invalid lecture account ${lectureAccount}`);
+                assert(cStudentAccount !== null, `Invalid student account ${studentAccount}`);
+                assert(cEducationToken !== null, `Invalid education token ${educationToken}`);
+                assert(cFeeAsset !== null, `Invalid fee asset ${this.feeAsset}`);
+
                 let tr = new TransactionBuilder();
 
                 tr.add_type_operation("transfer", {
                     fee: {
                         amount: 0,
-                        asset_id: feeAsset.get("id")
+                        asset_id: cFeeAsset.get("id")
                     },
-                    from: lectureAccount.get("id"),
-                    to: studentAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 1},
+                    from: cLectureAccount.get("id"),
+                    to: cStudentAccount.get("id"),
+                    amount: { asset_id: cEducationToken.get("id"), amount: 1},
                 } );
 
                 tr.set_required_fees().then(() => {
@@ -124,17 +130,21 @@ class TeacherApi{
                 FetchChain("getAccount", lectureAccount),
                 FetchChain("getAsset", utSchoolTokenTicket)
             ]).then((res)=> {
-                let [lectureAccount, ticketAsset] = res;
-                lectureAccount = lectureAccount.get('id');
-                ticketAsset = ticketAsset.get('id');
+                let [cLectureAccount, cTicketToken] = res;
+
+                assert(cLectureAccount !== null, `Invalid lecture account ${lectureAccount}`);
+                assert(cTicketToken !== null, `Invalid ticket token ${utSchoolTokenTicket}`);
+
+                cLectureAccount = cLectureAccount.get('id');
+                cTicketToken = cTicketToken.get('id');
 
 
-                BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then((operations)=>{
+                BitsharesApiExtends.fetchHistory(cLectureAccount, 100, 'transfer').then((operations)=>{
                     let lectureParticipantsIds = [];
                     for(let operation of operations){
                         let transferData=operation.op[1];
-                        if(transferData.from == lectureAccount
-                            && transferData.amount.asset_id == ticketAsset){
+                        if(transferData.from == cLectureAccount
+                            && transferData.amount.asset_id == cTicketToken){
                             lectureParticipantsIds.push(transferData.to);
                         }
                     }
@@ -144,13 +154,21 @@ class TeacherApi{
                         accounts = accounts.toJS();
                         let accountsMap = {};
 
-                        for(let account of accounts)
-                            if(account)
-                                accountsMap[account.id] = account;
+                        let index = -1;
+                        for(let account of accounts){
+                            index++;
+                            if(!account){
+                                console.log(`Have no information about account ${lectureParticipants[index]}`);
+                                continue;
+                            }
+                            accountsMap[account.id] = account;
+                        }
 
                         let lectureParticipants = [];
                         for(let participant of lectureParticipantsIds){
                             let accountData = accountsMap[participant];
+                            if(!accountData)
+                                continue;
                             lectureParticipants.push({
                                 'id': accountData.id,
                                 'name': accountData.name
@@ -182,29 +200,40 @@ class TeacherApi{
                 FetchChain("getAccount", lectureAccount),
                 FetchChain("getAsset", utSchoolTokenTicket)
             ]).then((res)=> {
-                let [lectureAccount, ticketAsset] = res;
-                let lectureAccountId = lectureAccount.get('id');
-                ticketAsset = ticketAsset.get('id');
+                let [cLectureAccount, cTicketToken] = res;
 
-                let proposals = lectureAccount.toJS().proposals;
+                assert(cLectureAccount !== null, `Invalid lecture account ${lectureAccount}`);
+                assert(cTicketToken !== null, `Invalid ticket token ${utSchoolTokenTicket}`);
+
+                let lectureAccountId = cLectureAccount.get('id');
+                cTicketToken = cTicketToken.get('id');
+
+                let proposals = cLectureAccount.toJS().proposals;
                 if(proposals.length == 0){
                     resolve([]);
                     return;
                 }
 
                 let applications = [];
-                FetchChain("getObject", proposals).then((proposals)=>{
-                    proposals = proposals.toJS();
+                FetchChain("getObject", proposals).then((cProposals)=>{
+                    cProposals = cProposals.toJS();
 
                     let accountIds = [];
-                    for(let proposal of proposals){
-                        if(Date.parse(proposal.proposed_transaction.expiration) < new Date()/1000)
+                    let index = -1;
+                    for(let cProposal of cProposals){
+                        index++;
+                        if(!cProposal){
+                            console.log(`Have no information about proposal ${proposals[index]}`);
                             continue;
-                        let operations = proposal.proposed_transaction.operations;
+                        }
+
+                        if(Date.parse(cProposal.proposed_transaction.expiration) < new Date()/1000)
+                            continue;
+                        let operations = cProposal.proposed_transaction.operations;
                         let acceptedOperation;
                         for(let operation of operations){
                             let operationData = operation[1];
-                            if(operationData.amount.asset_id == ticketAsset
+                            if(operationData.amount.asset_id == cTicketToken
                                 && operationData.from == lectureAccountId
                             ) {
                                 acceptedOperation = operationData;
@@ -217,7 +246,7 @@ class TeacherApi{
 
                         accountIds.push(acceptedOperation.to);
                         applications.push({
-                            'id': proposal.id,
+                            'id': cProposal.id,
                             'operation': acceptedOperation
                         });
                     }
@@ -230,9 +259,16 @@ class TeacherApi{
                         accounts = accounts.toJS();
                         let accountsMap = {};
 
-                        for(let account of accounts)
-                            if(account)
-                                accountsMap[account.id] = account;
+                        let index = -1;
+                        for(let account of accounts){
+                            index++;
+                            let accountId=accountIds[index];
+                            if(!account){
+                                console.log(`Have no information about account ${accountId}`);
+                                account = {id: accountId};
+                            }
+                            accountsMap[accountId] = account;
+                        }
 
                         for(let application of applications){
                             let accountData = accountsMap[application.operation.to];
@@ -262,6 +298,10 @@ class TeacherApi{
                 FetchChain("getAsset", this.feeAsset)
             ]).then((res)=> {
                 let [teacherAccount, feeAsset] = res;
+
+                assert(teacherAccount !== null, `Invalid teacher account ${this.account.name}`);
+                assert(feeAsset !== null, `Invalid fee asset ${this.feeAsset}`);
+
                 let tr = new TransactionBuilder();
                 teacherAccount = teacherAccount.get('id');
 
@@ -334,22 +374,28 @@ class TeacherApi{
                 FetchChain("getAccount", this.account.name),
                 FetchChain("getAsset", utSchoolToken)
             ]).then((res)=> {
-                let [utSchoolAccount, teacherAccount, utSchoolAsset] = res;
-                utSchoolAccount = utSchoolAccount.get('id');
-                teacherAccount = teacherAccount.get('id');
-                utSchoolAsset = utSchoolAsset.get('id');
+                let [cUtSchoolAccount, cTeacherAccount, cUtSchoolToken] = res;
+
+                assert(cUtSchoolAccount !== null, `Invalid utSchoolAccount ${utSchoolAccount}`);
+                assert(cTeacherAccount !== null, `Invalid teacher account ${this.account.name}`);
+                assert(cUtSchoolToken !== null, `Invalid utSchoolToken ${utSchoolToken}`);
 
 
-                BitsharesApiExtends.fetchHistory(utSchoolAccount, 100, 'transfer').then((operations)=>{
+                cUtSchoolAccount = cUtSchoolAccount.get('id');
+                cTeacherAccount = cTeacherAccount.get('id');
+                cUtSchoolToken = cUtSchoolToken.get('id');
+
+
+                BitsharesApiExtends.fetchHistory(cUtSchoolAccount, 100, 'transfer').then((operations)=>{
                     let lecturesIdsList = [];
                     for(let operation of operations){
                         let transferData=operation.op[1];
-                        if(transferData.from == utSchoolAccount
-                            && transferData.amount.asset_id == utSchoolAsset)
+                        if(transferData.from === cUtSchoolAccount
+                            && transferData.amount.asset_id === cUtSchoolToken)
                             lecturesIdsList.push(transferData.to);
                     }
 
-                    if(lecturesIdsList.length == 0){
+                    if(lecturesIdsList.length === 0){
                         resolve([]);
                         return;
                     }
@@ -359,17 +405,31 @@ class TeacherApi{
 
                         let teachersLecturesList = [];
 
+                        let index = -1;
                         for(let lecture of lectures)  {
-                            let currentTeacherId = lecture.active.account_auths[0][0];
-                            if(currentTeacherId == teacherAccount) {
-                                teachersLecturesList.push({
-                                    'id': lecture.id,
-                                    'name': lecture.name
-                                });
+                            index++;
+                            if(!lecture){
+                                console.log(`Have no information about lecture ${lecturesIdsList[index]}`);
+                                continue;
+                            }
+
+                            let account_auths = lecture.active.account_auths;
+                            if(account_auths.length === 0 || account_auths[0].length === 0)
+                                continue;
+
+                            let potentialTeacherIds = account_auths[0];
+                            for(let currentTeacherId of potentialTeacherIds){
+                                if(currentTeacherId === cTeacherAccount) {
+                                    teachersLecturesList.push({
+                                        'id': lecture.id,
+                                        'name': lecture.name
+                                    });
+                                    break;
+                                }
                             }
                         }
 
-                        if(teachersLecturesList.length == 0){
+                        if(teachersLecturesList.length === 0){
                             resolve([]);
                             return;
                         }

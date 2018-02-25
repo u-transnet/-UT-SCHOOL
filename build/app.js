@@ -127,23 +127,79 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                                                                                                                                                                                                      * Created by superpchelka on 24.02.18.
                                                                                                                                                                                                      */
 
-_commander2.default.version('1.0.0').option('-l, --login', 'login of your bitshares account').option('-p, --password', 'password of your bitshares account').option('-pvk, --privateKey', 'private key of your bitshares account').option('-n, --nodeUrl', 'url of node to connect').parse(process.argv);
+_commander2.default.version('1.0.0').option('-l, --login <login>', 'login of your bitshares account').option('-p, --password  [password]', 'password of your bitshares account').option('-k, --privateKey [privateKey]', 'private key of your bitshares account').option('-u, --url <nodeUrl>', 'url of node to connect').parse(process.argv);
 
-if (!_commander2.default.password && !_commander2.default.privateKey) throw "Error: you must provide password or privateKey for accessing to your bitshares account";
+if (!_commander2.default.password && !_commander2.default.privateKey) {
+    console.log("Error: you must provide password or privateKey for accessing to your bitshares account");
+    process.exit();
+}
 
-_Api2.default.getPrograms(_commander2.default, _commander2.default.nodeUrl, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function () {
+_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function (programs) {
     var rl = _readline2.default.createInterface({
         input: process.stdin,
         output: process.stdout
     });
     var prefix = '>';
+    programs.push(_commander2.default);
 
-    function callCommand(inputStr) {
-        _commander2.default.parse(['', ''].concat(_toConsumableArray(inputStr.split(' '))));
+    function callCommand(programs, inputStr) {
+        var pArgs = ['', ''].concat(_toConsumableArray(inputStr.split(' ')));
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = programs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var program = _step.value;
+
+                try {
+                    program.parse(pArgs);
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
     }
 
     _commander2.default.command('help').action(function () {
-        _commander2.default.outputHelp();
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+            for (var _iterator2 = programs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                var program = _step2.value;
+
+                program.outputHelp();
+                console.log("\n--------------------------\n");
+            }
+        } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                    _iterator2.return();
+                }
+            } finally {
+                if (_didIteratorError2) {
+                    throw _iteratorError2;
+                }
+            }
+        }
     });
 
     _commander2.default.command('exit').action(function () {
@@ -151,7 +207,7 @@ _Api2.default.getPrograms(_commander2.default, _commander2.default.nodeUrl, _com
     });
 
     rl.on('line', function (line) {
-        callCommand(line.trim());
+        callCommand(programs, line.trim());
         rl.setPrompt(prefix, prefix.length);
         rl.prompt();
     }).on('close', function () {
@@ -160,6 +216,8 @@ _Api2.default.getPrograms(_commander2.default, _commander2.default.nodeUrl, _com
 
     rl.setPrompt(prefix, prefix.length);
     rl.prompt();
+}).catch(function (error) {
+    console.log(error);
 });
     });
     // END FILE
@@ -205,9 +263,15 @@ var _TeacherApi = require("./TeacherApi");
 
 var _BlockchainApi = require("./BlockchainApi");
 
+var _assert = require("assert");
+
+var _assert2 = _interopRequireDefault(_assert);
+
 var _bitsharesjs = require("bitsharesjs");
 
 var _Configs = require("../common/Configs");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -288,6 +352,8 @@ var Api = function () {
                 return Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolFaucet)]).then(function (res) {
                     var _res = _slicedToArray(res, 1),
                         chain_registrar = _res[0];
+
+                    (0, _assert2.default)(chain_registrar, "Invalid faucet account " + _Configs.utSchoolFaucet);
 
                     var tr = new _bitsharesjs.TransactionBuilder();
                     tr.add_type_operation("account_create", {
@@ -536,6 +602,12 @@ var _BitsharesApiExtends = require('./BitsharesApiExtends');
 
 var _Configs = require('../common/Configs');
 
+var _assert = require('assert');
+
+var _assert2 = _interopRequireDefault(_assert);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var StudentApi = function () {
@@ -561,25 +633,29 @@ var StudentApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
                     var _res = _slicedToArray(res, 4),
-                        lectureAccount = _res[0],
-                        studentAccount = _res[1],
+                        cLectureAccount = _res[0],
+                        cStudentAccount = _res[1],
                         sendAsset = _res[2],
                         feeAsset = _res[3];
 
-                    var tr = new _bitsharesjs.TransactionBuilder();
+                    (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
+                    (0, _assert2.default)(cStudentAccount !== null, 'Invalid student account ' + _this.account.name);
+                    (0, _assert2.default)(sendAsset !== null, 'Invalid ticket token ' + _Configs.utSchoolTokenTicket);
+                    (0, _assert2.default)(feeAsset !== null, 'Invalid fee asset name ' + _this.feeAsset);
 
+                    var tr = new _bitsharesjs.TransactionBuilder();
                     tr.add_type_operation("transfer", {
                         fee: {
                             amount: 0,
                             asset_id: feeAsset.get("id")
                         },
-                        from: lectureAccount.get("id"),
-                        to: studentAccount.get("id"),
+                        from: cLectureAccount.get("id"),
+                        to: cStudentAccount.get("id"),
                         amount: { asset_id: sendAsset.get("id"), amount: 1 }
                     });
 
                     tr.propose({
-                        fee_paying_account: studentAccount.get("id")
+                        fee_paying_account: cStudentAccount.get("id")
                     });
 
                     tr.set_required_fees().then(function () {
@@ -609,13 +685,20 @@ var StudentApi = function () {
             var _this2 = this;
 
             return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this2.account.name), (0, _bitsharesjs.FetchChain)("getAsset", [_Configs.utSchoolTokenTicket, _Configs.utSchoolTokenSession, _Configs.utSchoolTokenGrade])]).then(function (res) {
+                var schoolTokens = [_Configs.utSchoolTokenTicket, _Configs.utSchoolTokenSession, _Configs.utSchoolTokenGrade];
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this2.account.name), (0, _bitsharesjs.FetchChain)("getAsset", schoolTokens)]).then(function (res) {
                     var _res2 = _slicedToArray(res, 3),
-                        lectureAccount = _res2[0],
+                        cLectureAccount = _res2[0],
                         studentAccount = _res2[1],
                         assets = _res2[2];
 
-                    var lectureAccountId = lectureAccount.get('id');
+                    (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + cLectureAccount);
+                    (0, _assert2.default)(studentAccount !== null, 'Invalid student account ' + _this2.account.name);
+                    (0, _assert2.default)(assets[0] !== null, 'Invalid ticket token ' + schoolTokens[0]);
+                    (0, _assert2.default)(assets[1] !== null, 'Invalid session token ' + schoolTokens[1]);
+                    (0, _assert2.default)(assets[2] !== null, 'Invalid grade token ' + schoolTokens[2]);
+
+                    var lectureAccountId = cLectureAccount.get('id');
                     var studentAccountId = studentAccount.get('id');
 
                     var assetsMap = {};
@@ -631,7 +714,7 @@ var StudentApi = function () {
                                 'id': asset.get('id'),
                                 'symbol': asset.get('symbol'),
                                 'accepted': false,
-                                'balance': _bitsharesjs.ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
+                                'balance': _bitsharesjs.ChainStore.getAccountBalance(cLectureAccount, asset.get('id'))
                             };
                         }
                     } catch (err) {
@@ -659,7 +742,7 @@ var StudentApi = function () {
                                 var operation = _step2.value;
 
                                 var transferData = operation.op[1];
-                                if (transferData.from == lectureAccountId && transferData.to == studentAccountId && assetsMap[transferData.amount.asset_id]) {
+                                if (transferData.from === lectureAccountId && transferData.to === studentAccountId && assetsMap[transferData.amount.asset_id]) {
                                     assetsMap[transferData.amount.asset_id].accepted = true;
                                 }
                             }
@@ -707,12 +790,15 @@ var StudentApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
                     var _res3 = _slicedToArray(res, 2),
-                        utSchoolAccount = _res3[0],
-                        utSchoolAsset = _res3[1];
+                        cUtSchoolAccount = _res3[0],
+                        cUtSchoolAsset = _res3[1];
 
-                    utSchoolAccount = utSchoolAccount.get('id');
-                    utSchoolAsset = utSchoolAsset.get('id');
-                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(utSchoolAccount, 100, 'transfer').then(function (operations) {
+                    (0, _assert2.default)(cUtSchoolAccount !== null, 'Invalid utSchoolAccount ' + _Configs.utSchoolAccount);
+                    (0, _assert2.default)(cUtSchoolAsset !== null, 'Invalid utSchoolToken ' + _Configs.utSchoolToken);
+
+                    cUtSchoolAccount = cUtSchoolAccount.get('id');
+                    cUtSchoolAsset = cUtSchoolAsset.get('id');
+                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(cUtSchoolAccount, 100, 'transfer').then(function (operations) {
                         var lecturesAccountsList = [];
                         var _iteratorNormalCompletion3 = true;
                         var _didIteratorError3 = false;
@@ -724,7 +810,7 @@ var StudentApi = function () {
 
                                 var transferData = operation.op[1];
 
-                                if (transferData.from == utSchoolAccount && transferData.amount.asset_id == utSchoolAsset) {
+                                if (transferData.from === cUtSchoolAccount && transferData.amount.asset_id === cUtSchoolAsset) {
                                     lecturesAccountsList.push(transferData.to);
                                 }
                             }
@@ -743,7 +829,7 @@ var StudentApi = function () {
                             }
                         }
 
-                        if (lecturesAccountsList.length == 0) {
+                        if (lecturesAccountsList.length === 0) {
                             resolve(lecturesList);
                             return;
                         }
@@ -751,6 +837,7 @@ var StudentApi = function () {
                         (0, _bitsharesjs.FetchChain)("getAccount", lecturesAccountsList).then(function (lectures) {
                             lectures = lectures.toJS();
                             var teachersIds = [];
+                            var index = -1;
                             var _iteratorNormalCompletion4 = true;
                             var _didIteratorError4 = false;
                             var _iteratorError4 = undefined;
@@ -759,6 +846,11 @@ var StudentApi = function () {
                                 for (var _iterator4 = lectures[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
                                     var lectureData = _step4.value;
 
+                                    index++;
+                                    if (!lectureData) {
+                                        console.log('Have no information about lecture with id ' + lecturesAccountsList[index]);
+                                        continue;
+                                    }
                                     lecturesList.push({
                                         'id': lectureData.id,
                                         'name': lectureData.name,
@@ -786,6 +878,7 @@ var StudentApi = function () {
 
                             (0, _bitsharesjs.FetchChain)("getAccount", teachersIds).then(function (teachers) {
                                 var teachersMap = {};
+                                var index = -1;
                                 teachers = teachers.toJS();
                                 var _iteratorNormalCompletion5 = true;
                                 var _didIteratorError5 = false;
@@ -795,6 +888,11 @@ var StudentApi = function () {
                                     for (var _iterator5 = teachers[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
                                         var teacher = _step5.value;
 
+                                        index++;
+                                        if (!teacher) {
+                                            console.log('Have no information about teacher with id ' + teachersIds[index]);
+                                            continue;
+                                        }
                                         teachersMap[teacher.id] = teacher;
                                     }
                                 } catch (err) {
@@ -821,7 +919,8 @@ var StudentApi = function () {
                                     for (var _iterator6 = lecturesList[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
                                         var lecture = _step6.value;
 
-                                        lecture.teacher.name = teachersMap[lecture.teacher.id].name;
+                                        var teacherData = teachersMap[lecture.teacher.id];
+                                        if (teacherData) lecture.teacher.name = teacherData.name;
                                         lectureStatePromiseList.push(_this3.getLectureStats(lecture.name));
                                     }
                                 } catch (err) {
@@ -882,6 +981,12 @@ var _BitsharesApiExtends = require('./BitsharesApiExtends');
 
 var _Configs = require('../common/Configs');
 
+var _assert = require('assert');
+
+var _assert2 = _interopRequireDefault(_assert);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var TeacherApi = function () {
@@ -909,21 +1014,26 @@ var TeacherApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAccount", studentAccount), (0, _bitsharesjs.FetchChain)("getAsset", educationToken), (0, _bitsharesjs.FetchChain)("getAsset", _this.feeAsset)]).then(function (res) {
                     var _res = _slicedToArray(res, 4),
-                        lectureAccount = _res[0],
-                        studentAccount = _res[1],
-                        sendAsset = _res[2],
-                        feeAsset = _res[3];
+                        cLectureAccount = _res[0],
+                        cStudentAccount = _res[1],
+                        cEducationToken = _res[2],
+                        cFeeAsset = _res[3];
+
+                    (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
+                    (0, _assert2.default)(cStudentAccount !== null, 'Invalid student account ' + studentAccount);
+                    (0, _assert2.default)(cEducationToken !== null, 'Invalid education token ' + educationToken);
+                    (0, _assert2.default)(cFeeAsset !== null, 'Invalid fee asset ' + _this.feeAsset);
 
                     var tr = new _bitsharesjs.TransactionBuilder();
 
                     tr.add_type_operation("transfer", {
                         fee: {
                             amount: 0,
-                            asset_id: feeAsset.get("id")
+                            asset_id: cFeeAsset.get("id")
                         },
-                        from: lectureAccount.get("id"),
-                        to: studentAccount.get("id"),
-                        amount: { asset_id: sendAsset.get("id"), amount: 1 }
+                        from: cLectureAccount.get("id"),
+                        to: cStudentAccount.get("id"),
+                        amount: { asset_id: cEducationToken.get("id"), amount: 1 }
                     });
 
                     tr.set_required_fees().then(function () {
@@ -1020,13 +1130,16 @@ var TeacherApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket)]).then(function (res) {
                     var _res3 = _slicedToArray(res, 2),
-                        lectureAccount = _res3[0],
-                        ticketAsset = _res3[1];
+                        cLectureAccount = _res3[0],
+                        cTicketToken = _res3[1];
 
-                    lectureAccount = lectureAccount.get('id');
-                    ticketAsset = ticketAsset.get('id');
+                    (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
+                    (0, _assert2.default)(cTicketToken !== null, 'Invalid ticket token ' + _Configs.utSchoolTokenTicket);
 
-                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(lectureAccount, 100, 'transfer').then(function (operations) {
+                    cLectureAccount = cLectureAccount.get('id');
+                    cTicketToken = cTicketToken.get('id');
+
+                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(cLectureAccount, 100, 'transfer').then(function (operations) {
                         var lectureParticipantsIds = [];
                         var _iteratorNormalCompletion = true;
                         var _didIteratorError = false;
@@ -1037,7 +1150,7 @@ var TeacherApi = function () {
                                 var operation = _step.value;
 
                                 var transferData = operation.op[1];
-                                if (transferData.from == lectureAccount && transferData.amount.asset_id == ticketAsset) {
+                                if (transferData.from == cLectureAccount && transferData.amount.asset_id == cTicketToken) {
                                     lectureParticipantsIds.push(transferData.to);
                                 }
                             }
@@ -1060,6 +1173,7 @@ var TeacherApi = function () {
                             accounts = accounts.toJS();
                             var accountsMap = {};
 
+                            var index = -1;
                             var _iteratorNormalCompletion2 = true;
                             var _didIteratorError2 = false;
                             var _iteratorError2 = undefined;
@@ -1068,7 +1182,12 @@ var TeacherApi = function () {
                                 for (var _iterator2 = accounts[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                                     var account = _step2.value;
 
-                                    if (account) accountsMap[account.id] = account;
+                                    index++;
+                                    if (!account) {
+                                        console.log('Have no information about account ' + lectureParticipants[index]);
+                                        continue;
+                                    }
+                                    accountsMap[account.id] = account;
                                 }
                             } catch (err) {
                                 _didIteratorError2 = true;
@@ -1095,6 +1214,7 @@ var TeacherApi = function () {
                                     var participant = _step3.value;
 
                                     var accountData = accountsMap[participant];
+                                    if (!accountData) continue;
                                     lectureParticipants.push({
                                         'id': accountData.id,
                                         'name': accountData.name
@@ -1141,33 +1261,43 @@ var TeacherApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket)]).then(function (res) {
                     var _res4 = _slicedToArray(res, 2),
-                        lectureAccount = _res4[0],
-                        ticketAsset = _res4[1];
+                        cLectureAccount = _res4[0],
+                        cTicketToken = _res4[1];
 
-                    var lectureAccountId = lectureAccount.get('id');
-                    ticketAsset = ticketAsset.get('id');
+                    (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
+                    (0, _assert2.default)(cTicketToken !== null, 'Invalid ticket token ' + _Configs.utSchoolTokenTicket);
 
-                    var proposals = lectureAccount.toJS().proposals;
+                    var lectureAccountId = cLectureAccount.get('id');
+                    cTicketToken = cTicketToken.get('id');
+
+                    var proposals = cLectureAccount.toJS().proposals;
                     if (proposals.length == 0) {
                         resolve([]);
                         return;
                     }
 
                     var applications = [];
-                    (0, _bitsharesjs.FetchChain)("getObject", proposals).then(function (proposals) {
-                        proposals = proposals.toJS();
+                    (0, _bitsharesjs.FetchChain)("getObject", proposals).then(function (cProposals) {
+                        cProposals = cProposals.toJS();
 
                         var accountIds = [];
+                        var index = -1;
                         var _iteratorNormalCompletion4 = true;
                         var _didIteratorError4 = false;
                         var _iteratorError4 = undefined;
 
                         try {
-                            for (var _iterator4 = proposals[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                                var proposal = _step4.value;
+                            for (var _iterator4 = cProposals[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                                var cProposal = _step4.value;
 
-                                if (Date.parse(proposal.proposed_transaction.expiration) < new Date() / 1000) continue;
-                                var operations = proposal.proposed_transaction.operations;
+                                index++;
+                                if (!cProposal) {
+                                    console.log('Have no information about proposal ' + proposals[index]);
+                                    continue;
+                                }
+
+                                if (Date.parse(cProposal.proposed_transaction.expiration) < new Date() / 1000) continue;
+                                var operations = cProposal.proposed_transaction.operations;
                                 var acceptedOperation = void 0;
                                 var _iteratorNormalCompletion7 = true;
                                 var _didIteratorError7 = false;
@@ -1178,7 +1308,7 @@ var TeacherApi = function () {
                                         var operation = _step7.value;
 
                                         var operationData = operation[1];
-                                        if (operationData.amount.asset_id == ticketAsset && operationData.from == lectureAccountId) {
+                                        if (operationData.amount.asset_id == cTicketToken && operationData.from == lectureAccountId) {
                                             acceptedOperation = operationData;
                                             break;
                                         }
@@ -1202,7 +1332,7 @@ var TeacherApi = function () {
 
                                 accountIds.push(acceptedOperation.to);
                                 applications.push({
-                                    'id': proposal.id,
+                                    'id': cProposal.id,
                                     'operation': acceptedOperation
                                 });
                             }
@@ -1229,6 +1359,7 @@ var TeacherApi = function () {
                             accounts = accounts.toJS();
                             var accountsMap = {};
 
+                            var index = -1;
                             var _iteratorNormalCompletion5 = true;
                             var _didIteratorError5 = false;
                             var _iteratorError5 = undefined;
@@ -1237,7 +1368,13 @@ var TeacherApi = function () {
                                 for (var _iterator5 = accounts[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
                                     var account = _step5.value;
 
-                                    if (account) accountsMap[account.id] = account;
+                                    index++;
+                                    var accountId = accountIds[index];
+                                    if (!account) {
+                                        console.log('Have no information about account ' + accountId);
+                                        account = { id: accountId };
+                                    }
+                                    accountsMap[accountId] = account;
                                 }
                             } catch (err) {
                                 _didIteratorError5 = true;
@@ -1307,6 +1444,9 @@ var TeacherApi = function () {
                     var _res5 = _slicedToArray(res, 2),
                         teacherAccount = _res5[0],
                         feeAsset = _res5[1];
+
+                    (0, _assert2.default)(teacherAccount !== null, 'Invalid teacher account ' + _this3.account.name);
+                    (0, _assert2.default)(feeAsset !== null, 'Invalid fee asset ' + _this3.feeAsset);
 
                     var tr = new _bitsharesjs.TransactionBuilder();
                     teacherAccount = teacherAccount.get('id');
@@ -1390,15 +1530,19 @@ var TeacherApi = function () {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this5.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
                     var _res7 = _slicedToArray(res, 3),
-                        utSchoolAccount = _res7[0],
-                        teacherAccount = _res7[1],
-                        utSchoolAsset = _res7[2];
+                        cUtSchoolAccount = _res7[0],
+                        cTeacherAccount = _res7[1],
+                        cUtSchoolToken = _res7[2];
 
-                    utSchoolAccount = utSchoolAccount.get('id');
-                    teacherAccount = teacherAccount.get('id');
-                    utSchoolAsset = utSchoolAsset.get('id');
+                    (0, _assert2.default)(cUtSchoolAccount !== null, 'Invalid utSchoolAccount ' + _Configs.utSchoolAccount);
+                    (0, _assert2.default)(cTeacherAccount !== null, 'Invalid teacher account ' + _this5.account.name);
+                    (0, _assert2.default)(cUtSchoolToken !== null, 'Invalid utSchoolToken ' + _Configs.utSchoolToken);
 
-                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(utSchoolAccount, 100, 'transfer').then(function (operations) {
+                    cUtSchoolAccount = cUtSchoolAccount.get('id');
+                    cTeacherAccount = cTeacherAccount.get('id');
+                    cUtSchoolToken = cUtSchoolToken.get('id');
+
+                    _BitsharesApiExtends.BitsharesApiExtends.fetchHistory(cUtSchoolAccount, 100, 'transfer').then(function (operations) {
                         var lecturesIdsList = [];
                         var _iteratorNormalCompletion8 = true;
                         var _didIteratorError8 = false;
@@ -1409,7 +1553,7 @@ var TeacherApi = function () {
                                 var operation = _step8.value;
 
                                 var transferData = operation.op[1];
-                                if (transferData.from == utSchoolAccount && transferData.amount.asset_id == utSchoolAsset) lecturesIdsList.push(transferData.to);
+                                if (transferData.from === cUtSchoolAccount && transferData.amount.asset_id === cUtSchoolToken) lecturesIdsList.push(transferData.to);
                             }
                         } catch (err) {
                             _didIteratorError8 = true;
@@ -1426,7 +1570,7 @@ var TeacherApi = function () {
                             }
                         }
 
-                        if (lecturesIdsList.length == 0) {
+                        if (lecturesIdsList.length === 0) {
                             resolve([]);
                             return;
                         }
@@ -1436,6 +1580,7 @@ var TeacherApi = function () {
 
                             var teachersLecturesList = [];
 
+                            var index = -1;
                             var _iteratorNormalCompletion9 = true;
                             var _didIteratorError9 = false;
                             var _iteratorError9 = undefined;
@@ -1444,12 +1589,45 @@ var TeacherApi = function () {
                                 for (var _iterator9 = lectures[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
                                     var lecture = _step9.value;
 
-                                    var currentTeacherId = lecture.active.account_auths[0][0];
-                                    if (currentTeacherId == teacherAccount) {
-                                        teachersLecturesList.push({
-                                            'id': lecture.id,
-                                            'name': lecture.name
-                                        });
+                                    index++;
+                                    if (!lecture) {
+                                        console.log('Have no information about lecture ' + lecturesIdsList[index]);
+                                        continue;
+                                    }
+
+                                    var account_auths = lecture.active.account_auths;
+                                    if (account_auths.length === 0 || account_auths[0].length === 0) continue;
+
+                                    var potentialTeacherIds = account_auths[0];
+                                    var _iteratorNormalCompletion10 = true;
+                                    var _didIteratorError10 = false;
+                                    var _iteratorError10 = undefined;
+
+                                    try {
+                                        for (var _iterator10 = potentialTeacherIds[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+                                            var currentTeacherId = _step10.value;
+
+                                            if (currentTeacherId === cTeacherAccount) {
+                                                teachersLecturesList.push({
+                                                    'id': lecture.id,
+                                                    'name': lecture.name
+                                                });
+                                                break;
+                                            }
+                                        }
+                                    } catch (err) {
+                                        _didIteratorError10 = true;
+                                        _iteratorError10 = err;
+                                    } finally {
+                                        try {
+                                            if (!_iteratorNormalCompletion10 && _iterator10.return) {
+                                                _iterator10.return();
+                                            }
+                                        } finally {
+                                            if (_didIteratorError10) {
+                                                throw _iteratorError10;
+                                            }
+                                        }
                                     }
                                 }
                             } catch (err) {
@@ -1467,7 +1645,7 @@ var TeacherApi = function () {
                                 }
                             }
 
-                            if (teachersLecturesList.length == 0) {
+                            if (teachersLecturesList.length === 0) {
                                 resolve([]);
                                 return;
                             }
@@ -1496,9 +1674,11 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by superpchelka on 24.02.18.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _class, _temp; /**
+                    * Created by superpchelka on 24.02.18.
+                    */
 
 var _StudentApi = require('./StudentApi');
 
@@ -1510,70 +1690,202 @@ var _TeacherApi2 = _interopRequireDefault(_TeacherApi);
 
 var _Api = require('../api/Api');
 
+var _ProgramsGenerator = require('./ProgramsGenerator');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Api = function () {
+var Api = (_temp = _class = function () {
     function Api() {
         _classCallCheck(this, Api);
     }
 
     _createClass(Api, null, [{
         key: 'getPrograms',
-        value: function patch(program, nodeUrl, login, password, privateKey) {
-            if (!privateKey) privateKey = Api.generateKeys(login, password).pubKeys.active;
+        value: function getPrograms(nodeUrl, login, password, privateKey) {
+            return _Api.Api.init(nodeUrl, login, privateKey).then(function (api) {
+                if (!privateKey) privateKey = _Api.Api.generateKeys(login, password).pubKeys.active;
 
-            Api.__addCommands(program);
-            _StudentApi2.default.getPrograms(program);
-            _TeacherApi2.default.getPrograms(program);
-
-            return Api.init(nodeUrl, login, privateKey).then(function (api) {
-                Api.schoolApi = api;
-            });
-        }
-    }, {
-        key: '__addCommands',
-        value: function __addCommands(program) {
-            program.command('setPrivateKey').option('-p, --privateKey', 'private key').action(function (_, options) {
-                var _Api$schoolApi;
-
-                return (_Api$schoolApi = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi, _toConsumableArray(options));
-            });
-
-            program.command('register').option('-l, --login', 'name of the new bitshares account').option('-p, --password', 'password for generating bitshares keys').action(function (_, options) {
-                var _Api$schoolApi2;
-
-                return (_Api$schoolApi2 = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi2, _toConsumableArray(options));
-            });
-
-            program.command('register').option('-l, --login', 'name of the new bitshares account').option('-p, --password', 'password for generating bitshares keys').action(function (_, options) {
-                var _Api$schoolApi3;
-
-                return (_Api$schoolApi3 = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi3, _toConsumableArray(options));
+                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi)));
             });
         }
     }]);
 
     return Api;
-}();
-
+}(), _class.programs = [{
+    command: {
+        name: 'setPrivateKey',
+        description: 'set private key of current user'
+    },
+    options: [{
+        key: 'privateKey',
+        name: '-p, --privateKey <privateKey>',
+        description: 'private key',
+        required: true
+    }],
+    exec: 'setPrivateKey'
+}, {
+    command: {
+        name: 'register',
+        description: 'register user by login, password'
+    },
+    options: [{
+        key: 'login',
+        name: '-l, --login <login>',
+        description: 'name of the new bitshares account',
+        required: true
+    }, {
+        key: 'password',
+        name: '-p, --password <password>',
+        description: 'password for generating bitshares keys',
+        required: true
+    }],
+    exec: 'register'
+}], _temp);
 exports.default = Api;
+    });
+    // END FILE
+
+    // BEGIN FILE ./cli/ProgramsGenerator.js
+    require.register("./cli/ProgramsGenerator.js", function (module, exports, require) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.generatePrograms = undefined;
+
+var _commander = require("commander");
+
+var _commander2 = _interopRequireDefault(_commander);
+
+var _util = require("util");
+
+var _util2 = _interopRequireDefault(_util);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Created by superpchelka on 25.02.18.
+ */
+
+function generatePrograms(programsList, api) {
+    var programs = [];
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+        var _loop = function _loop() {
+            var programData = _step.value;
+
+            var program = new _commander2.default.Command(programData.command.name);
+            program.description(programData.command.description);
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = programData.options[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var option = _step2.value;
+
+                    program.option(option.name, option.description);
+                }
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            program.action(function (commandName, command) {
+                if (commandName !== programData.command.name) return;
+
+                var apiArgs = [];
+                var _iteratorNormalCompletion3 = true;
+                var _didIteratorError3 = false;
+                var _iteratorError3 = undefined;
+
+                try {
+                    for (var _iterator3 = programData.options[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                        var option = _step3.value;
+
+                        var optionValue = command[option.key];
+                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) throw "Option " + option.name + " is required for method " + commandName;
+                        apiArgs.push(optionValue);
+                    }
+                } catch (err) {
+                    _didIteratorError3 = true;
+                    _iteratorError3 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                            _iterator3.return();
+                        }
+                    } finally {
+                        if (_didIteratorError3) {
+                            throw _iteratorError3;
+                        }
+                    }
+                }
+
+                api[programData.exec].apply(api, apiArgs).then(function (resp) {
+                    console.log(_util2.default.inspect(resp, false, null));
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            });
+
+            programs.push(program);
+        };
+
+        for (var _iterator = programsList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            _loop();
+        }
+    } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+            }
+        } finally {
+            if (_didIteratorError) {
+                throw _iteratorError;
+            }
+        }
+    }
+
+    return programs;
+}
+
+exports.generatePrograms = generatePrograms;
     });
     // END FILE
 
     // BEGIN FILE ./cli/StudentApi.js
     require.register("./cli/StudentApi.js", function (module, exports, require) {
 
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _class, _temp;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1581,19 +1893,40 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * Created by superpchelka on 24.02.18.
  */
 
-var StudentApi = function () {
-  function StudentApi() {
+var StudentApi = (_temp = _class = function StudentApi() {
     _classCallCheck(this, StudentApi);
-  }
-
-  _createClass(StudentApi, null, [{
-    key: "getPrograms",
-    value: function patch(program) {}
-  }]);
-
-  return StudentApi;
-}();
-
+}, _class.programs = [{
+    command: {
+        name: 'studentApi.applyForLecture',
+        description: 'apply current user for the lecture'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }],
+    exec: 'applyForLecture'
+}, {
+    command: {
+        name: 'studentApi.getLectureStats',
+        description: 'collect information about lecture'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }],
+    exec: 'getLectureStats'
+}, {
+    command: {
+        name: 'studentApi.getLectures',
+        description: 'return all available lectures for current user'
+    },
+    options: [],
+    exec: 'getLectures'
+}], _temp);
 exports.default = StudentApi;
     });
     // END FILE
@@ -1601,13 +1934,13 @@ exports.default = StudentApi;
     // BEGIN FILE ./cli/TeacherApi.js
     require.register("./cli/TeacherApi.js", function (module, exports, require) {
 
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _class, _temp;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1615,19 +1948,105 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * Created by superpchelka on 24.02.18.
  */
 
-var TeacherApi = function () {
-  function TeacherApi() {
+var TeacherApi = (_temp = _class = function TeacherApi() {
     _classCallCheck(this, TeacherApi);
-  }
-
-  _createClass(TeacherApi, null, [{
-    key: "getPrograms",
-    value: function patch(program) {}
-  }]);
-
-  return TeacherApi;
-}();
-
+}, _class.programs = [{
+    command: {
+        name: 'teacherApi.sendSessionToken',
+        description: 'send session token from lecture account to particular student'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }, {
+        key: 'studentAccount',
+        name: '-s, --studentAccount <studentAccount>',
+        description: 'name of the bitshares student account',
+        required: true
+    }],
+    exec: 'sendSessionToken'
+}, {
+    command: {
+        name: 'teacherApi.sendGradeToken',
+        description: 'send grade token from lecture account to particular student'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }, {
+        key: 'studentAccount',
+        name: '-s, --studentAccount <studentAccount>',
+        description: 'name of the bitshares student account',
+        required: true
+    }],
+    exec: 'sendGradeToken'
+}, {
+    command: {
+        name: 'teacherApi.requestTeacherRole',
+        description: 'request teacher role for current bitshares account'
+    },
+    options: [],
+    exec: 'requestTeacherRole'
+}, {
+    command: {
+        name: 'teacherApi.getLectureParticipants',
+        description: 'fetch from blockchain information about participants of the lecture'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }],
+    exec: 'getLectureParticipants'
+}, {
+    command: {
+        name: 'teacherApi.getLectureApplications',
+        description: 'fetch from blockchain information about applications for the lecture'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }],
+    exec: 'getLectureApplications'
+}, {
+    command: {
+        name: 'teacherApi.acceptApplication',
+        description: 'accept proposal for application for the lecture'
+    },
+    options: [{
+        key: 'lectureApplicationId',
+        name: '-i, --lectureApplicationId <lectureApplicationId>',
+        description: 'id of the proposal for application for the lecture',
+        required: true
+    }],
+    exec: 'acceptApplication'
+}, {
+    command: {
+        name: 'teacherApi.getLectureStats',
+        description: 'return statistics about particular lecture'
+    },
+    options: [{
+        key: 'lectureAccount',
+        name: '-l, --lectureAccount <lectureAccount>',
+        description: 'name of the bitshares lecture account',
+        required: true
+    }],
+    exec: 'getLectureStats'
+}, {
+    command: {
+        name: 'teacherApi.getLectures',
+        description: 'collect all lectures of the current user'
+    },
+    options: [],
+    exec: 'getLectures'
+}], _temp);
 exports.default = TeacherApi;
     });
     // END FILE

@@ -6,6 +6,7 @@ import {Account} from '../common/Account'
 import {StudentApi} from "./StudentApi";
 import {TeacherApi} from "./TeacherApi";
 import {BlockchainApi} from "./BlockchainApi"
+import assert from "assert";
 import {FetchChain, TransactionBuilder, ChainValidation, Login} from "bitsharesjs";
 import {utSchoolFaucet} from "../common/Configs"
 
@@ -74,6 +75,8 @@ class Api{
                 FetchChain("getAccount", utSchoolFaucet),
             ]).then((res)=> {
                 let [ chain_registrar ] = res;
+
+                assert(chain_registrar, `Invalid faucet account ${utSchoolFaucet}`);
 
                 let tr = new TransactionBuilder();
                 tr.add_type_operation("account_create", {

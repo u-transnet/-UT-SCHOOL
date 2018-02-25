@@ -4,6 +4,7 @@
 import {ChainStore, FetchChain, TransactionBuilder} from "bitsharesjs";
 import {BitsharesApiExtends} from './BitsharesApiExtends'
 import {utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade, utSchoolToken, utSchoolAccount} from '../common/Configs'
+import assert from "assert";
 
 
 
@@ -27,21 +28,26 @@ class StudentApi{
                 FetchChain("getAsset", utSchoolTokenTicket),
                 FetchChain("getAsset", this.feeAsset)
             ]).then((res)=> {
-                let [lectureAccount, studentAccount, sendAsset, feeAsset] = res;
-                let tr = new TransactionBuilder();
+                let [cLectureAccount, cStudentAccount, sendAsset, feeAsset] = res;
 
+                assert(cLectureAccount !== null, `Invalid lecture account ${lectureAccount}`);
+                assert(cStudentAccount !== null, `Invalid student account ${this.account.name}`);
+                assert(sendAsset !== null, `Invalid ticket token ${utSchoolTokenTicket}`);
+                assert(feeAsset !== null, `Invalid fee asset name ${this.feeAsset}`);
+
+                let tr = new TransactionBuilder();
                 tr.add_type_operation("transfer", {
                     fee: {
                         amount: 0,
                         asset_id: feeAsset.get("id")
                     },
-                    from: lectureAccount.get("id"),
-                    to: studentAccount.get("id"),
+                    from: cLectureAccount.get("id"),
+                    to: cStudentAccount.get("id"),
                     amount: { asset_id: sendAsset.get("id"), amount: 1},
                 } );
 
                 tr.propose({
-                    fee_paying_account: studentAccount.get("id"),
+                    fee_paying_account: cStudentAccount.get("id"),
                 });
 
                 tr.set_required_fees().then(() => {
@@ -66,13 +72,22 @@ class StudentApi{
      */
     getLectureStats(lectureAccount){
         return new Promise((resolve, reject) => {
+            let schoolTokens = [utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade];
             Promise.all([
                 FetchChain("getAccount", lectureAccount),
                 FetchChain("getAccount", this.account.name),
-                FetchChain("getAsset", [utSchoolTokenTicket, utSchoolTokenSession, utSchoolTokenGrade])
+                FetchChain("getAsset", schoolTokens)
             ]).then((res)=> {
-                let [lectureAccount, studentAccount, assets] = res;
-                let lectureAccountId = lectureAccount.get('id');
+                let [cLectureAccount, studentAccount, assets] = res;
+
+                assert(cLectureAccount !== null, `Invalid lecture account ${cLectureAccount}`);
+                assert(studentAccount !== null, `Invalid student account ${this.account.name}`);
+                assert(assets[0] !== null, `Invalid ticket token ${schoolTokens[0]}`);
+                assert(assets[1] !== null, `Invalid session token ${schoolTokens[1]}`);
+                assert(assets[2] !== null, `Invalid grade token ${schoolTokens[2]}`);
+
+
+                let lectureAccountId = cLectureAccount.get('id');
                 let studentAccountId = studentAccount.get('id');
 
                 let assetsMap = {};
@@ -81,14 +96,14 @@ class StudentApi{
                         'id': asset.get('id'),
                         'symbol': asset.get('symbol'),
                         'accepted': false,
-                        'balance': ChainStore.getAccountBalance(lectureAccount, asset.get('id'))
+                        'balance': ChainStore.getAccountBalance(cLectureAccount, asset.get('id'))
                     };
 
                 BitsharesApiExtends.fetchHistory(lectureAccountId, 100, 'transfer').then((operations)=>{
                     for(let operation of operations){
                         let transferData=operation.op[1];
-                        if(transferData.from == lectureAccountId
-                            && transferData.to == studentAccountId
+                        if(transferData.from === lectureAccountId
+                            && transferData.to === studentAccountId
                             && assetsMap[transferData.amount.asset_id]){
                             assetsMap[transferData.amount.asset_id].accepted = true;
                         }
@@ -119,21 +134,25 @@ class StudentApi{
                 FetchChain("getAccount", utSchoolAccount),
                 FetchChain("getAsset", utSchoolToken)
             ]).then((res)=> {
-                let [utSchoolAccount, utSchoolAsset] = res;
-                utSchoolAccount = utSchoolAccount.get('id');
-                utSchoolAsset = utSchoolAsset.get('id');
-                BitsharesApiExtends.fetchHistory(utSchoolAccount, 100, 'transfer').then((operations)=>{
+                let [cUtSchoolAccount, cUtSchoolAsset] = res;
+
+                assert(cUtSchoolAccount !== null, `Invalid utSchoolAccount ${utSchoolAccount}`);
+                assert(cUtSchoolAsset !== null, `Invalid utSchoolToken ${utSchoolToken}`);
+
+                cUtSchoolAccount = cUtSchoolAccount.get('id');
+                cUtSchoolAsset = cUtSchoolAsset.get('id');
+                BitsharesApiExtends.fetchHistory(cUtSchoolAccount, 100, 'transfer').then((operations)=>{
                     let lecturesAccountsList = [];
                     for(let operation of operations){
                         let transferData=operation.op[1];
 
-                        if(transferData.from == utSchoolAccount
-                            && transferData.amount.asset_id == utSchoolAsset){
+                        if(transferData.from === cUtSchoolAccount
+                            && transferData.amount.asset_id === cUtSchoolAsset){
                             lecturesAccountsList.push(transferData.to);
                         }
                     }
 
-                    if(lecturesAccountsList.length == 0) {
+                    if(lecturesAccountsList.length === 0) {
                         resolve(lecturesList);
                         return;
                     }
@@ -141,7 +160,13 @@ class StudentApi{
                     FetchChain("getAccount", lecturesAccountsList).then((lectures)=>{
                         lectures = lectures.toJS();
                         let teachersIds = [];
+                        let index = -1;
                         for(let lectureData of lectures){
+                            index++;
+                            if(!lectureData){
+                                console.log(`Have no information about lecture with id ${lecturesAccountsList[index]}`);
+                                continue;
+                            }
                             lecturesList.push({
                                 'id': lectureData.id,
                                 'name': lectureData.name,
@@ -155,13 +180,22 @@ class StudentApi{
 
                         FetchChain("getAccount", teachersIds).then((teachers)=>{
                             let teachersMap = {};
+                            let index = -1;
                             teachers = teachers.toJS();
-                            for(let teacher of teachers)
+                            for(let teacher of teachers) {
+                                index++;
+                                if(!teacher){
+                                    console.log(`Have no information about teacher with id ${teachersIds[index]}`);
+                                    continue;
+                                }
                                 teachersMap[teacher.id] = teacher;
+                            }
 
                             let lectureStatePromiseList = [];
                             for(let lecture of lecturesList) {
-                                lecture.teacher.name = teachersMap[lecture.teacher.id].name;
+                                let teacherData = teachersMap[lecture.teacher.id];
+                                if(teacherData)
+                                    lecture.teacher.name = teacherData.name;
                                 lectureStatePromiseList.push(this.getLectureStats(lecture.name));
                             }
 
