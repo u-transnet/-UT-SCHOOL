@@ -76,45 +76,6 @@ class TeacherApi{
         return this._sendToken(lectureAccount, studentAccount, utSchoolTokenGrade);
     }
 
-
-    /**
-     * @desc request teacher role for current bitshares account
-     * @return serialized proposal transaction
-     */
-    requestTeacherRole(){
-        return new Promise((resolve, reject)=>{
-            Promise.all([
-                FetchChain("getAccount", utSchoolAccount),
-                FetchChain("getAccount", this.account.name),
-                FetchChain("getAsset", utSchoolToken),
-                FetchChain("getAsset", this.feeAsset)
-            ]).then((res)=> {
-                let [utSchoolAccount, teacherAccount, sendAsset, feeAsset] = res;
-                let tr = new TransactionBuilder();
-
-                tr.add_type_operation("transfer", {
-                    fee: {
-                        amount: 0,
-                        asset_id: feeAsset.get("id")
-                    },
-                    from: utSchoolAccount.get("id"),
-                    to: teacherAccount.get("id"),
-                    amount: { asset_id: sendAsset.get("id"), amount: 1},
-                } );
-
-                tr.propose({
-                    fee_paying_account: teacherAccount.get("id")
-                });
-
-                tr.set_required_fees().then(() => {
-                    tr.add_signer(this.account.privateKey, this.account.privateKey.toPublicKey().toPublicKeyString());
-                    tr.broadcast().catch(reject);
-                    resolve(tr.serialize());
-                }).catch(reject);
-            }).catch(reject);
-        })
-    }
-
     /**
      * @desc fetch from blockchain information about participants of the lecture
      * @param lectureAccount - name of the bitshares lecture account

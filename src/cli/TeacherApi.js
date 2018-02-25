@@ -50,15 +50,6 @@ class TeacherApi{
         },
         {
             command: {
-                name: 'teacherApi.requestTeacherRole',
-                description: 'request teacher role for current bitshares account'
-            },
-            options: [
-            ],
-            exec: 'requestTeacherRole'
-        },
-        {
-            command: {
                 name: 'teacherApi.getLectureParticipants',
                 description: 'fetch from blockchain information about participants of the lecture'
             },
