@@ -143,16 +143,17 @@ var rl = _readline2.default.createInterface({
     output: process.stdout
 });
 var prefix = '>';
-
-_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey, function (commandName, resp, isError) {
+var onResult = function onResult(commandName, resp, isError) {
     console.log(_util2.default.inspect(resp, false, null));
     rl.setPrompt(prefix, prefix.length);
     rl.prompt();
-}).then(function (programs) {
-    programs.push(_commander2.default);
+};
 
-    function callCommand(programs, inputStr) {
-        var pArgs = ['', ''].concat(_toConsumableArray(inputStr.split(' ')));
+_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey, onResult).then(function (programs) {
+    //programs.push(Commander);
+
+    programs.push(new _commander2.default.Command('help').action(function (commandName) {
+        if (commandName !== 'help') return;
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -161,11 +162,8 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
             for (var _iterator = programs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var program = _step.value;
 
-                try {
-                    program.parse(pArgs);
-                } catch (e) {
-                    console.log(e);
-                }
+                program.outputHelp();
+                console.log("\n--------------------------\n");
             }
         } catch (err) {
             _didIteratorError = true;
@@ -181,9 +179,22 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
                 }
             }
         }
-    }
 
-    _commander2.default.command('help').action(function () {
+        onResult(commandName, '', false);
+    }));
+
+    programs.push(new _commander2.default.Command('exit').action(function (commandName) {
+        if (commandName !== 'exit') return;
+        rl.close();
+    }));
+
+    function callCommand(programs, inputStr) {
+        var params = inputStr.split(' ');
+        var commandName = params[0];
+        var pArgs = ['', ''].concat(_toConsumableArray(params));
+
+        var processed = false;
+
         var _iteratorNormalCompletion2 = true;
         var _didIteratorError2 = false;
         var _iteratorError2 = undefined;
@@ -192,8 +203,12 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
             for (var _iterator2 = programs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                 var program = _step2.value;
 
-                program.outputHelp();
-                console.log("\n--------------------------\n");
+                try {
+                    if (commandName === program.name()) processed = true;
+                    program.parse(pArgs);
+                } catch (e) {
+                    console.log(e);
+                }
             }
         } catch (err) {
             _didIteratorError2 = true;
@@ -209,11 +224,9 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
                 }
             }
         }
-    });
 
-    _commander2.default.command('exit').action(function () {
-        rl.close();
-    });
+        if (!processed) onResult(null, 'Unknown command ' + commandName, true);
+    }
 
     rl.on('line', function (line) {
         callCommand(programs, line.trim());

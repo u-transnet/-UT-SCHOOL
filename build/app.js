@@ -127,9 +127,9 @@ var _util2 = _interopRequireDefault(_util);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
-                                                                                                                                                                                                     * Created by superpchelka on 24.02.18.
-                                                                                                                                                                                                     */
+/**
+ * Created by superpchelka on 24.02.18.
+ */
 
 _commander2.default.version('1.0.0').option('-l, --login <login>', 'login of your bitshares account').option('-p, --password  [password]', 'password of your bitshares account').option('-k, --privateKey [privateKey]', 'private key of your bitshares account').option('-u, --url <nodeUrl>', 'url of node to connect').parse(process.argv);
 
@@ -149,10 +149,18 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
     rl.setPrompt(prefix, prefix.length);
     rl.prompt();
 }).then(function (programs) {
-    programs.push(_commander2.default);
+
+    var exitCommand = new _commander2.default.Command('exit').action(function () {
+        rl.close();
+    });
 
     function callCommand(programs, inputStr) {
-        var pArgs = ['', ''].concat(_toConsumableArray(inputStr.split(' ')));
+        var params = inputStr.split(' ');
+        var commandName = params[0];
+        var pArgs = ['', '', params];
+
+        var processed = false;
+
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -162,6 +170,7 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
                 var program = _step.value;
 
                 try {
+                    if (commandName === program.name()) processed = true;
                     program.parse(pArgs);
                 } catch (e) {
                     console.log(e);
@@ -181,39 +190,9 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
                 }
             }
         }
+
+        if (!processed) console.log('Unknow command ' + commandName);
     }
-
-    _commander2.default.command('help').action(function () {
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-            for (var _iterator2 = programs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var program = _step2.value;
-
-                program.outputHelp();
-                console.log("\n--------------------------\n");
-            }
-        } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                    _iterator2.return();
-                }
-            } finally {
-                if (_didIteratorError2) {
-                    throw _iteratorError2;
-                }
-            }
-        }
-    });
-
-    _commander2.default.command('exit').action(function () {
-        rl.close();
-    });
 
     rl.on('line', function (line) {
         callCommand(programs, line.trim());
@@ -1656,6 +1635,10 @@ var _Api = require('../api/Api');
 
 var _ProgramsGenerator = require('./ProgramsGenerator');
 
+var _commander = require('commander');
+
+var _commander2 = _interopRequireDefault(_commander);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -1673,7 +1656,37 @@ var Api = (_temp = _class = function () {
             return _Api.Api.init(nodeUrl, login, privateKey).then(function (api) {
                 if (!privateKey) privateKey = _Api.Api.generateKeys(login, password).pubKeys.active;
 
-                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi, onResult)));
+                var programs = [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi, onResult)));
+
+                programs.push(new _commander2.default.Command('help').action(function () {
+                    var _iteratorNormalCompletion = true;
+                    var _didIteratorError = false;
+                    var _iteratorError = undefined;
+
+                    try {
+                        for (var _iterator = programs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                            var program = _step.value;
+
+                            program.outputHelp();
+                            console.log("\n--------------------------\n");
+                        }
+                    } catch (err) {
+                        _didIteratorError = true;
+                        _iteratorError = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion && _iterator.return) {
+                                _iterator.return();
+                            }
+                        } finally {
+                            if (_didIteratorError) {
+                                throw _iteratorError;
+                            }
+                        }
+                    }
+                }));
+
+                return programs;
             });
         }
     }]);

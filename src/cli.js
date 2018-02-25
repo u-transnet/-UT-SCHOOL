@@ -26,40 +26,57 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 const prefix = '>';
-
-Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.privateKey, (commandName, resp, isError)=>{
+let onResult = (commandName, resp, isError)=>{
     console.log(util.inspect(resp, false, null));
     rl.setPrompt(prefix, prefix.length);
     rl.prompt();
-}).then((programs)=>{
-    programs.push(Commander);
+};
+
+Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.privateKey, onResult).then((programs)=>{
+    //programs.push(Commander);
+
+    programs.push(
+        new Commander.Command('help')
+            .action((commandName)=>{
+                if(commandName !== 'help')
+                    return;
+                for(let program of programs) {
+                    program.outputHelp();
+                    console.log("\n--------------------------\n");
+                }
+                onResult(commandName, '', false);
+            })
+    );
+
+    programs.push(
+        new Commander.Command('exit')
+            .action((commandName)=>{
+                if(commandName !== 'exit')
+                    return;
+                rl.close();
+            })
+    );
 
     function callCommand(programs, inputStr) {
-        let pArgs = ['', '', ...inputStr.split(' ')];
+        let params = inputStr.split(' ');
+        let commandName = params[0];
+        let pArgs = ['', '', ...params];
+
+        let processed = false;
+
         for(let program of programs) {
             try{
+                if(commandName===program.name())
+                    processed = true;
                 program.parse(pArgs);
             }catch(e){
                 console.log(e);
             }
-
         }
+
+        if(!processed)
+            onResult(null, `Unknown command ${commandName}`, true)
     }
-
-    Commander
-        .command('help')
-        .action(()=>{
-            for(let program of programs) {
-                program.outputHelp();
-                console.log("\n--------------------------\n");
-            }
-        });
-
-    Commander
-        .command('exit')
-        .action(()=>{
-            rl.close();
-        });
 
     rl.on('line', (line)=>{
         callCommand(programs, line.trim());
