@@ -111,17 +111,56 @@
 
 var _Api = require('./cli/Api');
 
+var _Api2 = _interopRequireDefault(_Api);
+
 var _commander = require('commander');
 
 var _commander2 = _interopRequireDefault(_commander);
 
+var _readline = require('readline');
+
+var _readline2 = _interopRequireDefault(_readline);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/**
- * Created by superpchelka on 24.02.18.
- */
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
+                                                                                                                                                                                                     * Created by superpchelka on 24.02.18.
+                                                                                                                                                                                                     */
 
-_commander2.default.version('1.0.0').option('-l, --login', 'login of your bitshares account').option('-p, --password', 'password of your bitshares account').option('-pvk, --private-key', 'private key of your bitshares account').parse(process.argv);
+_commander2.default.version('1.0.0').option('-l, --login', 'login of your bitshares account').option('-p, --password', 'password of your bitshares account').option('-pvk, --privateKey', 'private key of your bitshares account').option('-n, --nodeUrl', 'url of node to connect').parse(process.argv);
+
+if (!_commander2.default.password && !_commander2.default.privateKey) throw "Error: you must provide password or privateKey for accessing to your bitshares account";
+
+_Api2.default.patch(_commander2.default, _commander2.default.nodeUrl, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function () {
+    var rl = _readline2.default.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    var prefix = '>';
+
+    function callCommand(inputStr) {
+        _commander2.default.parse(['', ''].concat(_toConsumableArray(inputStr.split(' '))));
+    }
+
+    _commander2.default.command('help').action(function () {
+        _commander2.default.outputHelp();
+    });
+
+    _commander2.default.command('exit').action(function () {
+        rl.close();
+    });
+
+    rl.on('line', function (line) {
+        callCommand(line.trim());
+        rl.setPrompt(prefix, prefix.length);
+        rl.prompt();
+    }).on('close', function () {
+        process.exit(0);
+    });
+
+    rl.setPrompt(prefix, prefix.length);
+    rl.prompt();
+});
     });
     // END FILE
 
@@ -181,7 +220,7 @@ var Api = function () {
          * @desc initialize api for interacting with blockchain
          * @param nodeUrl - url of node for connection
          * @param accountName - name of bitshares account
-         * @param privateKey - private of bitshares account
+         * @param [privateKey] - private of bitshares account (optional)
          * @return api object
          */
         value: function init(nodeUrl, accountName, privateKey) {
@@ -233,7 +272,7 @@ var Api = function () {
         /**
          * @desc register user by login, password
          * @param login - name of the new bitshares account
-         * @param password
+         * @param password - password for generating bitshares keys
          * @return serialized transaction
          */
 
@@ -1451,30 +1490,145 @@ exports.TeacherApi = TeacherApi;
     // BEGIN FILE ./cli/Api.js
     require.register("./cli/Api.js", function (module, exports, require) {
 
-/**
- * Created by superpchelka on 24.02.18.
- */
-"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by superpchelka on 24.02.18.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+var _StudentApi = require('./StudentApi');
+
+var _StudentApi2 = _interopRequireDefault(_StudentApi);
+
+var _TeacherApi = require('./TeacherApi');
+
+var _TeacherApi2 = _interopRequireDefault(_TeacherApi);
+
+var _Api = require('../api/Api');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Api = function () {
+    function Api() {
+        _classCallCheck(this, Api);
+    }
+
+    _createClass(Api, null, [{
+        key: 'patch',
+        value: function patch(program, nodeUrl, login, password, privateKey) {
+            if (!privateKey) privateKey = Api.generateKeys(login, password).pubKeys.active;
+
+            Api.__addCommands(program);
+            _StudentApi2.default.patch(program);
+            _TeacherApi2.default.patch(program);
+
+            return Api.init(nodeUrl, login, privateKey).then(function (api) {
+                Api.schoolApi = api;
+            });
+        }
+    }, {
+        key: '__addCommands',
+        value: function __addCommands(program) {
+            program.command('setPrivateKey').option('-p, --privateKey', 'private key').action(function (_, options) {
+                var _Api$schoolApi;
+
+                return (_Api$schoolApi = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi, _toConsumableArray(options));
+            });
+
+            program.command('register').option('-l, --login', 'name of the new bitshares account').option('-p, --password', 'password for generating bitshares keys').action(function (_, options) {
+                var _Api$schoolApi2;
+
+                return (_Api$schoolApi2 = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi2, _toConsumableArray(options));
+            });
+
+            program.command('register').option('-l, --login', 'name of the new bitshares account').option('-p, --password', 'password for generating bitshares keys').action(function (_, options) {
+                var _Api$schoolApi3;
+
+                return (_Api$schoolApi3 = Api.schoolApi).setPrivateKey.apply(_Api$schoolApi3, _toConsumableArray(options));
+            });
+        }
+    }]);
+
+    return Api;
+}();
+
+exports.default = Api;
     });
     // END FILE
 
     // BEGIN FILE ./cli/StudentApi.js
     require.register("./cli/StudentApi.js", function (module, exports, require) {
 
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 /**
  * Created by superpchelka on 24.02.18.
  */
-"use strict";
+
+var StudentApi = function () {
+  function StudentApi() {
+    _classCallCheck(this, StudentApi);
+  }
+
+  _createClass(StudentApi, null, [{
+    key: "patch",
+    value: function patch(program) {}
+  }]);
+
+  return StudentApi;
+}();
+
+exports.default = StudentApi;
     });
     // END FILE
 
     // BEGIN FILE ./cli/TeacherApi.js
     require.register("./cli/TeacherApi.js", function (module, exports, require) {
 
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 /**
  * Created by superpchelka on 24.02.18.
  */
-"use strict";
+
+var TeacherApi = function () {
+  function TeacherApi() {
+    _classCallCheck(this, TeacherApi);
+  }
+
+  _createClass(TeacherApi, null, [{
+    key: "patch",
+    value: function patch(program) {}
+  }]);
+
+  return TeacherApi;
+}();
+
+exports.default = TeacherApi;
     });
     // END FILE
 

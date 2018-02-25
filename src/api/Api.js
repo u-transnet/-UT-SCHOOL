@@ -57,7 +57,7 @@ class Api{
     /**
      * @desc register user by login, password
      * @param login - name of the new bitshares account
-     * @param password
+     * @param password - password for generating bitshares keys
      * @return serialized transaction
      */
     register(
