@@ -19,7 +19,6 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
-    "cli": "^1.0.1",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
     "gulp-concat-js": "^0.1.0",
@@ -30,6 +29,7 @@
   },
   "dependencies": {
     "bitsharesjs": "^1.4.4",
-    "bitsharesjs-ws": "^1.3.2"
+    "bitsharesjs-ws": "^1.3.2",
+    "commander": "^2.14.1"
   }
 }

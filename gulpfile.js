@@ -25,3 +25,17 @@ gulp.task('build', function() {
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('build'));
 });
+
+gulp.task('build-cli', function() {
+    return gulp.src('src/**/*.js')
+        .pipe(plumber())
+        .pipe(babel({
+            presets: ['es2015', 'stage-0', 'stage-1'],
+            plugins: ["transform-decorators-legacy"]
+        }))
+        .pipe(concat({
+            entry: "./cli.js",
+            target: "cli.js"
+        }))
+        .pipe(gulp.dest('build'));
+});
