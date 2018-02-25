@@ -129,7 +129,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 _commander2.default.version('1.0.0').option('-l, --login <login>', 'login of your bitshares account').option('-p, --password  [password]', 'password of your bitshares account').option('-k, --privateKey [privateKey]', 'private key of your bitshares account').option('-u, --url <nodeUrl>', 'url of node to connect').parse(process.argv);
 
-if (!_commander2.default.password && !_commander2.default.privateKey) throw "Error: you must provide password or privateKey for accessing to your bitshares account";
+if (!_commander2.default.password && !_commander2.default.privateKey) {
+    console.log("Error: you must provide password or privateKey for accessing to your bitshares account");
+    process.exit();
+}
 
 _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function (programs) {
     var rl = _readline2.default.createInterface({
@@ -137,10 +140,10 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
         output: process.stdout
     });
     var prefix = '>';
+    programs.push(_commander2.default);
 
     function callCommand(programs, inputStr) {
         var pArgs = ['', ''].concat(_toConsumableArray(inputStr.split(' ')));
-        _commander2.default.parse(pArgs);
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -149,7 +152,11 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
             for (var _iterator = programs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var program = _step.value;
 
-                program.parse(pArgs);
+                try {
+                    program.parse(pArgs);
+                } catch (e) {
+                    console.log(e);
+                }
             }
         } catch (err) {
             _didIteratorError = true;
@@ -1596,7 +1603,8 @@ var Api = (_temp = _class = function () {
     options: [{
         key: 'privateKey',
         name: '-p, --privateKey <privateKey>',
-        description: 'private key'
+        description: 'private key',
+        required: true
     }],
     exec: 'setPrivateKey'
 }, {
@@ -1607,11 +1615,13 @@ var Api = (_temp = _class = function () {
     options: [{
         key: 'login',
         name: '-l, --login <login>',
-        description: 'name of the new bitshares account'
+        description: 'name of the new bitshares account',
+        required: true
     }, {
         key: 'password',
         name: '-p, --password <password>',
-        description: 'password for generating bitshares keys'
+        description: 'password for generating bitshares keys',
+        required: true
     }],
     exec: 'register'
 }], _temp);
@@ -1633,7 +1643,15 @@ var _commander = require("commander");
 
 var _commander2 = _interopRequireDefault(_commander);
 
+var _util = require("util");
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Created by superpchelka on 25.02.18.
+ */
 
 function generatePrograms(programsList, api) {
     var programs = [];
@@ -1645,8 +1663,7 @@ function generatePrograms(programsList, api) {
         var _loop = function _loop() {
             var programData = _step.value;
 
-            var program = new _commander2.default.Command();
-            program.command(programData.command.name);
+            var program = new _commander2.default.Command(programData.command.name);
             program.description(programData.command.description);
             var _iteratorNormalCompletion2 = true;
             var _didIteratorError2 = false;
@@ -1677,7 +1694,6 @@ function generatePrograms(programsList, api) {
                 if (commandName !== programData.command.name) return;
 
                 var apiArgs = [];
-                console.log(command);
                 var _iteratorNormalCompletion3 = true;
                 var _didIteratorError3 = false;
                 var _iteratorError3 = undefined;
@@ -1686,7 +1702,9 @@ function generatePrograms(programsList, api) {
                     for (var _iterator3 = programData.options[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
                         var option = _step3.value;
 
-                        apiArgs.push(command[option.key]);
+                        var optionValue = command[option.key];
+                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) throw "Option " + option.name + " is required for method " + commandName;
+                        apiArgs.push(optionValue);
                     }
                 } catch (err) {
                     _didIteratorError3 = true;
@@ -1704,7 +1722,7 @@ function generatePrograms(programsList, api) {
                 }
 
                 api[programData.exec].apply(api, apiArgs).then(function (resp) {
-                    console.log(resp);
+                    console.log(_util2.default.inspect(resp, false, null));
                 }).catch(function (error) {
                     console.log(error);
                 });
@@ -1732,9 +1750,7 @@ function generatePrograms(programsList, api) {
     }
 
     return programs;
-} /**
-   * Created by superpchelka on 25.02.18.
-   */
+}
 
 exports.generatePrograms = generatePrograms;
     });
@@ -1767,7 +1783,8 @@ var StudentApi = (_temp = _class = function StudentApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }],
     exec: 'applyForLecture'
 }, {
@@ -1778,7 +1795,8 @@ var StudentApi = (_temp = _class = function StudentApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }],
     exec: 'getLectureStats'
 }, {
@@ -1820,11 +1838,13 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }, {
         key: 'studentAccount',
         name: '-s, --studentAccount <studentAccount>',
-        description: 'name of the bitshares student account'
+        description: 'name of the bitshares student account',
+        required: true
     }],
     exec: 'sendSessionToken'
 }, {
@@ -1835,11 +1855,13 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }, {
         key: 'studentAccount',
         name: '-s, --studentAccount <studentAccount>',
-        description: 'name of the bitshares student account'
+        description: 'name of the bitshares student account',
+        required: true
     }],
     exec: 'sendGradeToken'
 }, {
@@ -1857,7 +1879,8 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }],
     exec: 'getLectureParticipants'
 }, {
@@ -1868,7 +1891,8 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }],
     exec: 'getLectureApplications'
 }, {
@@ -1879,7 +1903,8 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureApplicationId',
         name: '-i, --lectureApplicationId <lectureApplicationId>',
-        description: 'id of the proposal for application for the lecture'
+        description: 'id of the proposal for application for the lecture',
+        required: true
     }],
     exec: 'acceptApplication'
 }, {
@@ -1890,7 +1915,8 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
     options: [{
         key: 'lectureAccount',
         name: '-l, --lectureAccount <lectureAccount>',
-        description: 'name of the bitshares lecture account'
+        description: 'name of the bitshares lecture account',
+        required: true
     }],
     exec: 'getLectureStats'
 }, {

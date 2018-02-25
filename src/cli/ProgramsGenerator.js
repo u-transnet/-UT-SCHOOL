@@ -3,12 +3,12 @@
  */
 
 import Program from "commander"
+import util from "util";
 
 function generatePrograms(programsList, api) {
     let programs = [];
     for(let programData of programsList){
-        let program = new Program.Command();
-        program.command(programData.command.name);
+        let program = new Program.Command(programData.command.name);
         program.description(programData.command.description);
         for(let option of programData.options)
             program.option(option.name, option.description);
@@ -18,11 +18,15 @@ function generatePrograms(programsList, api) {
                     return;
 
                 let apiArgs = [];
-                for(let option of programData.options)
-                    apiArgs.push(command[option.key])
+                for(let option of programData.options) {
+                    let optionValue = command[option.key];
+                    if((typeof optionValue === 'undefined' || optionValue === null) && option.required)
+                        throw `Option ${option.name} is required for method ${commandName}`;
+                    apiArgs.push(optionValue)
+                }
 
                 api[programData.exec](...apiArgs)
-                    .then((resp)=>{console.log(resp)})
+                    .then((resp)=>{console.log(util.inspect(resp, false, null))})
                     .catch((error)=>{console.log(error)})
             }
         );

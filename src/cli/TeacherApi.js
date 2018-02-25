@@ -15,12 +15,14 @@ class TeacherApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
                 {
                     key: 'studentAccount',
                     name: '-s, --studentAccount <studentAccount>',
-                    description: 'name of the bitshares student account'
+                    description: 'name of the bitshares student account',
+                    required: true
                 },
             ],
             exec: 'sendSessionToken'
@@ -34,12 +36,14 @@ class TeacherApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
                 {
                     key: 'studentAccount',
                     name: '-s, --studentAccount <studentAccount>',
-                    description: 'name of the bitshares student account'
+                    description: 'name of the bitshares student account',
+                    required: true
                 },
             ],
             exec: 'sendGradeToken'
@@ -62,7 +66,8 @@ class TeacherApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
             ],
             exec: 'getLectureParticipants'
@@ -76,7 +81,8 @@ class TeacherApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
             ],
             exec: 'getLectureApplications'
@@ -90,7 +96,8 @@ class TeacherApi{
                 {
                     key: 'lectureApplicationId',
                     name: '-i, --lectureApplicationId <lectureApplicationId>',
-                    description: 'id of the proposal for application for the lecture'
+                    description: 'id of the proposal for application for the lecture',
+                    required: true
                 },
             ],
             exec: 'acceptApplication'
@@ -104,7 +111,8 @@ class TeacherApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
             ],
             exec: 'getLectureStats'

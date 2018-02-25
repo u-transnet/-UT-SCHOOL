@@ -19,7 +19,8 @@ class Api{
                 {
                     key: 'privateKey',
                     name: '-p, --privateKey <privateKey>',
-                    description: 'private key'
+                    description: 'private key',
+                    required: true
                 }
             ],
             exec: 'setPrivateKey'
@@ -33,12 +34,14 @@ class Api{
                 {
                     key: 'login',
                     name: '-l, --login <login>',
-                    description: 'name of the new bitshares account'
+                    description: 'name of the new bitshares account',
+                    required: true
                 },
                 {
                     key: 'password',
                     name: '-p, --password <password>',
-                    description: 'password for generating bitshares keys'
+                    description: 'password for generating bitshares keys',
+                    required: true
                 },
             ],
             exec: 'register'

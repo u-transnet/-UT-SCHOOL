@@ -15,8 +15,10 @@ Commander
     .option('-u, --url <nodeUrl>', 'url of node to connect')
     .parse(process.argv);
 
-if(!Commander.password && !Commander.privateKey)
-    throw "Error: you must provide password or privateKey for accessing to your bitshares account";
+if(!Commander.password && !Commander.privateKey) {
+    console.log("Error: you must provide password or privateKey for accessing to your bitshares account");
+    process.exit();
+}
 
 Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.privateKey).then((programs)=>{
     const rl = readline.createInterface({
@@ -24,12 +26,17 @@ Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.pr
         output: process.stdout
     });
     const prefix = '>';
+    programs.push(Commander);
 
     function callCommand(programs, inputStr) {
         let pArgs = ['', '', ...inputStr.split(' ')];
-        Commander.parse(pArgs);
         for(let program of programs) {
-            program.parse(pArgs);
+            try{
+                program.parse(pArgs);
+            }catch(e){
+                console.log(e);
+            }
+
         }
     }
 

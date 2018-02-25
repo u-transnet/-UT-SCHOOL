@@ -30,6 +30,7 @@
   "dependencies": {
     "bitsharesjs": "^1.4.4",
     "bitsharesjs-ws": "^1.3.2",
-    "commander": "^2.14.1"
+    "commander": "^2.14.1",
+    "util": "^0.10.3"
   }
 }

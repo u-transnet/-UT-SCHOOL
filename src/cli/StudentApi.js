@@ -14,7 +14,8 @@ class StudentApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
             ],
             exec: 'applyForLecture'
@@ -28,7 +29,8 @@ class StudentApi{
                 {
                     key: 'lectureAccount',
                     name: '-l, --lectureAccount <lectureAccount>',
-                    description: 'name of the bitshares lecture account'
+                    description: 'name of the bitshares lecture account',
+                    required: true
                 },
             ],
             exec: 'getLectureStats'
