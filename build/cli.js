@@ -121,6 +121,10 @@ var _readline = require('readline');
 
 var _readline2 = _interopRequireDefault(_readline);
 
+var _util = require('util');
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
@@ -134,12 +138,17 @@ if (!_commander2.default.password && !_commander2.default.privateKey) {
     process.exit();
 }
 
-_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function (programs) {
-    var rl = _readline2.default.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-    var prefix = '>';
+var rl = _readline2.default.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+var prefix = '>';
+
+_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey, function (commandName, resp, isError) {
+    console.log(_util2.default.inspect(resp, false, null));
+    rl.setPrompt(prefix, prefix.length);
+    rl.prompt();
+}).then(function (programs) {
     programs.push(_commander2.default);
 
     function callCommand(programs, inputStr) {
@@ -208,8 +217,6 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
 
     rl.on('line', function (line) {
         callCommand(programs, line.trim());
-        rl.setPrompt(prefix, prefix.length);
-        rl.prompt();
     }).on('close', function () {
         process.exit(0);
     });
@@ -1072,49 +1079,6 @@ var TeacherApi = function () {
         }
 
         /**
-         * @desc request teacher role for current bitshares account
-         * @return serialized proposal transaction
-         */
-
-    }, {
-        key: 'requestTeacherRole',
-        value: function requestTeacherRole() {
-            var _this2 = this;
-
-            return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this2.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken), (0, _bitsharesjs.FetchChain)("getAsset", _this2.feeAsset)]).then(function (res) {
-                    var _res2 = _slicedToArray(res, 4),
-                        utSchoolAccount = _res2[0],
-                        teacherAccount = _res2[1],
-                        sendAsset = _res2[2],
-                        feeAsset = _res2[3];
-
-                    var tr = new _bitsharesjs.TransactionBuilder();
-
-                    tr.add_type_operation("transfer", {
-                        fee: {
-                            amount: 0,
-                            asset_id: feeAsset.get("id")
-                        },
-                        from: utSchoolAccount.get("id"),
-                        to: teacherAccount.get("id"),
-                        amount: { asset_id: sendAsset.get("id"), amount: 1 }
-                    });
-
-                    tr.propose({
-                        fee_paying_account: teacherAccount.get("id")
-                    });
-
-                    tr.set_required_fees().then(function () {
-                        tr.add_signer(_this2.account.privateKey, _this2.account.privateKey.toPublicKey().toPublicKeyString());
-                        tr.broadcast().catch(reject);
-                        resolve(tr.serialize());
-                    }).catch(reject);
-                }).catch(reject);
-            });
-        }
-
-        /**
          * @desc fetch from blockchain information about participants of the lecture
          * @param lectureAccount - name of the bitshares lecture account
          * @return list of participants
@@ -1129,9 +1093,9 @@ var TeacherApi = function () {
         value: function getLectureParticipants(lectureAccount) {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket)]).then(function (res) {
-                    var _res3 = _slicedToArray(res, 2),
-                        cLectureAccount = _res3[0],
-                        cTicketToken = _res3[1];
+                    var _res2 = _slicedToArray(res, 2),
+                        cLectureAccount = _res2[0],
+                        cTicketToken = _res2[1];
 
                     (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
                     (0, _assert2.default)(cTicketToken !== null, 'Invalid ticket token ' + _Configs.utSchoolTokenTicket);
@@ -1260,9 +1224,9 @@ var TeacherApi = function () {
         value: function getLectureApplications(lectureAccount) {
             return new Promise(function (resolve, reject) {
                 Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", lectureAccount), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolTokenTicket)]).then(function (res) {
-                    var _res4 = _slicedToArray(res, 2),
-                        cLectureAccount = _res4[0],
-                        cTicketToken = _res4[1];
+                    var _res3 = _slicedToArray(res, 2),
+                        cLectureAccount = _res3[0],
+                        cTicketToken = _res3[1];
 
                     (0, _assert2.default)(cLectureAccount !== null, 'Invalid lecture account ' + lectureAccount);
                     (0, _assert2.default)(cTicketToken !== null, 'Invalid ticket token ' + _Configs.utSchoolTokenTicket);
@@ -1437,16 +1401,16 @@ var TeacherApi = function () {
     }, {
         key: 'acceptApplication',
         value: function acceptApplication(lectureApplicationId) {
-            var _this3 = this;
+            var _this2 = this;
 
             return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _this3.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _this3.feeAsset)]).then(function (res) {
-                    var _res5 = _slicedToArray(res, 2),
-                        teacherAccount = _res5[0],
-                        feeAsset = _res5[1];
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _this2.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _this2.feeAsset)]).then(function (res) {
+                    var _res4 = _slicedToArray(res, 2),
+                        teacherAccount = _res4[0],
+                        feeAsset = _res4[1];
 
-                    (0, _assert2.default)(teacherAccount !== null, 'Invalid teacher account ' + _this3.account.name);
-                    (0, _assert2.default)(feeAsset !== null, 'Invalid fee asset ' + _this3.feeAsset);
+                    (0, _assert2.default)(teacherAccount !== null, 'Invalid teacher account ' + _this2.account.name);
+                    (0, _assert2.default)(feeAsset !== null, 'Invalid fee asset ' + _this2.feeAsset);
 
                     var tr = new _bitsharesjs.TransactionBuilder();
                     teacherAccount = teacherAccount.get('id');
@@ -1462,7 +1426,7 @@ var TeacherApi = function () {
                     });
 
                     tr.set_required_fees().then(function () {
-                        tr.add_signer(_this3.account.privateKey, _this3.account.privateKey.toPublicKey().toPublicKeyString());
+                        tr.add_signer(_this2.account.privateKey, _this2.account.privateKey.toPublicKey().toPublicKeyString());
                         tr.broadcast().catch(reject);
                         resolve(tr.serialize());
                     }).catch(reject);
@@ -1493,21 +1457,21 @@ var TeacherApi = function () {
     }, {
         key: '__processLectureQueue',
         value: function __processLectureQueue(lectures, index, onFinish) {
-            var _this4 = this;
+            var _this3 = this;
 
             if (index >= lectures.length) {
                 onFinish(lectures);
                 return;
             }
             this.getLectureStats(lectures[index].name).then(function (res) {
-                var _res6 = _slicedToArray(res, 2),
-                    participants = _res6[0],
-                    applications = _res6[1];
+                var _res5 = _slicedToArray(res, 2),
+                    participants = _res5[0],
+                    applications = _res5[1];
 
                 lectures[index].participants = participants;
                 lectures[index].applications = applications;
 
-                _this4.__processLectureQueue(lectures, index + 1, onFinish);
+                _this3.__processLectureQueue(lectures, index + 1, onFinish);
             });
         }
 
@@ -1525,17 +1489,17 @@ var TeacherApi = function () {
     }, {
         key: 'getLectures',
         value: function getLectures() {
-            var _this5 = this;
+            var _this4 = this;
 
             return new Promise(function (resolve, reject) {
-                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this5.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
-                    var _res7 = _slicedToArray(res, 3),
-                        cUtSchoolAccount = _res7[0],
-                        cTeacherAccount = _res7[1],
-                        cUtSchoolToken = _res7[2];
+                Promise.all([(0, _bitsharesjs.FetchChain)("getAccount", _Configs.utSchoolAccount), (0, _bitsharesjs.FetchChain)("getAccount", _this4.account.name), (0, _bitsharesjs.FetchChain)("getAsset", _Configs.utSchoolToken)]).then(function (res) {
+                    var _res6 = _slicedToArray(res, 3),
+                        cUtSchoolAccount = _res6[0],
+                        cTeacherAccount = _res6[1],
+                        cUtSchoolToken = _res6[2];
 
                     (0, _assert2.default)(cUtSchoolAccount !== null, 'Invalid utSchoolAccount ' + _Configs.utSchoolAccount);
-                    (0, _assert2.default)(cTeacherAccount !== null, 'Invalid teacher account ' + _this5.account.name);
+                    (0, _assert2.default)(cTeacherAccount !== null, 'Invalid teacher account ' + _this4.account.name);
                     (0, _assert2.default)(cUtSchoolToken !== null, 'Invalid utSchoolToken ' + _Configs.utSchoolToken);
 
                     cUtSchoolAccount = cUtSchoolAccount.get('id');
@@ -1650,7 +1614,7 @@ var TeacherApi = function () {
                                 return;
                             }
 
-                            _this5.__processLectureQueue(teachersLecturesList, 0, resolve);
+                            _this4.__processLectureQueue(teachersLecturesList, 0, resolve);
                         }).catch(reject);
                     }).catch(reject);
                 }).catch(reject);
@@ -1705,11 +1669,11 @@ var Api = (_temp = _class = function () {
 
     _createClass(Api, null, [{
         key: 'getPrograms',
-        value: function getPrograms(nodeUrl, login, password, privateKey) {
+        value: function getPrograms(nodeUrl, login, password, privateKey, onResult) {
             return _Api.Api.init(nodeUrl, login, privateKey).then(function (api) {
                 if (!privateKey) privateKey = _Api.Api.generateKeys(login, password).pubKeys.active;
 
-                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi)));
+                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi, onResult)));
             });
         }
     }]);
@@ -1763,17 +1727,9 @@ var _commander = require("commander");
 
 var _commander2 = _interopRequireDefault(_commander);
 
-var _util = require("util");
-
-var _util2 = _interopRequireDefault(_util);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/**
- * Created by superpchelka on 25.02.18.
- */
-
-function generatePrograms(programsList, api) {
+function generatePrograms(programsList, api, onResult) {
     var programs = [];
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
@@ -1823,7 +1779,10 @@ function generatePrograms(programsList, api) {
                         var option = _step3.value;
 
                         var optionValue = command[option.key];
-                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) throw "Option " + option.name + " is required for method " + commandName;
+                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) {
+                            onResult(commandName, "Option " + option.name + " is required for method " + commandName, true);
+                            return;
+                        }
                         apiArgs.push(optionValue);
                     }
                 } catch (err) {
@@ -1842,9 +1801,9 @@ function generatePrograms(programsList, api) {
                 }
 
                 api[programData.exec].apply(api, apiArgs).then(function (resp) {
-                    console.log(_util2.default.inspect(resp, false, null));
+                    onResult(commandName, resp, false);
                 }).catch(function (error) {
-                    console.log(error);
+                    onResult(commandName, error, true);
                 });
             });
 
@@ -1870,7 +1829,9 @@ function generatePrograms(programsList, api) {
     }
 
     return programs;
-}
+} /**
+   * Created by superpchelka on 25.02.18.
+   */
 
 exports.generatePrograms = generatePrograms;
     });
@@ -1984,13 +1945,6 @@ var TeacherApi = (_temp = _class = function TeacherApi() {
         required: true
     }],
     exec: 'sendGradeToken'
-}, {
-    command: {
-        name: 'teacherApi.requestTeacherRole',
-        description: 'request teacher role for current bitshares account'
-    },
-    options: [],
-    exec: 'requestTeacherRole'
 }, {
     command: {
         name: 'teacherApi.getLectureParticipants',

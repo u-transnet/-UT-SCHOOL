@@ -3,9 +3,8 @@
  */
 
 import Program from "commander"
-import util from "util";
 
-function generatePrograms(programsList, api) {
+function generatePrograms(programsList, api, onResult) {
     let programs = [];
     for(let programData of programsList){
         let program = new Program.Command(programData.command.name);
@@ -20,14 +19,20 @@ function generatePrograms(programsList, api) {
                 let apiArgs = [];
                 for(let option of programData.options) {
                     let optionValue = command[option.key];
-                    if((typeof optionValue === 'undefined' || optionValue === null) && option.required)
-                        throw `Option ${option.name} is required for method ${commandName}`;
+                    if((typeof optionValue === 'undefined' || optionValue === null) && option.required){
+                        onResult(commandName, `Option ${option.name} is required for method ${commandName}`, true);
+                        return;
+                    }
                     apiArgs.push(optionValue)
                 }
 
                 api[programData.exec](...apiArgs)
-                    .then((resp)=>{console.log(util.inspect(resp, false, null))})
-                    .catch((error)=>{console.log(error)})
+                .then((resp)=>{
+                    onResult(commandName, resp, false);
+                })
+                .catch((error)=>{
+                    onResult(commandName, error, true);
+                })
             }
         );
 

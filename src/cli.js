@@ -5,6 +5,7 @@
 import Api from './cli/Api';
 import Commander from 'commander';
 import readline from 'readline';
+import util from "util";
 
 
 Commander
@@ -20,12 +21,17 @@ if(!Commander.password && !Commander.privateKey) {
     process.exit();
 }
 
-Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.privateKey).then((programs)=>{
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-    const prefix = '>';
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+const prefix = '>';
+
+Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.privateKey, (commandName, resp, isError)=>{
+    console.log(util.inspect(resp, false, null));
+    rl.setPrompt(prefix, prefix.length);
+    rl.prompt();
+}).then((programs)=>{
     programs.push(Commander);
 
     function callCommand(programs, inputStr) {
@@ -57,8 +63,6 @@ Api.getPrograms(Commander.url, Commander.login, Commander.password, Commander.pr
 
     rl.on('line', (line)=>{
         callCommand(programs, line.trim());
-        rl.setPrompt(prefix, prefix.length);
-        rl.prompt();
     }).on('close', ()=>{
         process.exit(0);
     });

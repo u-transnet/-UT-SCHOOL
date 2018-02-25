@@ -121,6 +121,10 @@ var _readline = require('readline');
 
 var _readline2 = _interopRequireDefault(_readline);
 
+var _util = require('util');
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
@@ -134,12 +138,17 @@ if (!_commander2.default.password && !_commander2.default.privateKey) {
     process.exit();
 }
 
-_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey).then(function (programs) {
-    var rl = _readline2.default.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-    var prefix = '>';
+var rl = _readline2.default.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+var prefix = '>';
+
+_Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _commander2.default.password, _commander2.default.privateKey, function (commandName, resp, isError) {
+    console.log(_util2.default.inspect(resp, false, null));
+    rl.setPrompt(prefix, prefix.length);
+    rl.prompt();
+}).then(function (programs) {
     programs.push(_commander2.default);
 
     function callCommand(programs, inputStr) {
@@ -208,8 +217,6 @@ _Api2.default.getPrograms(_commander2.default.url, _commander2.default.login, _c
 
     rl.on('line', function (line) {
         callCommand(programs, line.trim());
-        rl.setPrompt(prefix, prefix.length);
-        rl.prompt();
     }).on('close', function () {
         process.exit(0);
     });
@@ -1662,11 +1669,11 @@ var Api = (_temp = _class = function () {
 
     _createClass(Api, null, [{
         key: 'getPrograms',
-        value: function getPrograms(nodeUrl, login, password, privateKey) {
+        value: function getPrograms(nodeUrl, login, password, privateKey, onResult) {
             return _Api.Api.init(nodeUrl, login, privateKey).then(function (api) {
                 if (!privateKey) privateKey = _Api.Api.generateKeys(login, password).pubKeys.active;
 
-                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi)));
+                return [].concat(_toConsumableArray((0, _ProgramsGenerator.generatePrograms)(Api.programs, api, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_StudentApi2.default.programs, api.studentApi, onResult)), _toConsumableArray((0, _ProgramsGenerator.generatePrograms)(_TeacherApi2.default.programs, api.teacherApi, onResult)));
             });
         }
     }]);
@@ -1720,17 +1727,9 @@ var _commander = require("commander");
 
 var _commander2 = _interopRequireDefault(_commander);
 
-var _util = require("util");
-
-var _util2 = _interopRequireDefault(_util);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/**
- * Created by superpchelka on 25.02.18.
- */
-
-function generatePrograms(programsList, api) {
+function generatePrograms(programsList, api, onResult) {
     var programs = [];
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
@@ -1780,7 +1779,10 @@ function generatePrograms(programsList, api) {
                         var option = _step3.value;
 
                         var optionValue = command[option.key];
-                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) throw "Option " + option.name + " is required for method " + commandName;
+                        if ((typeof optionValue === 'undefined' || optionValue === null) && option.required) {
+                            onResult(commandName, "Option " + option.name + " is required for method " + commandName, true);
+                            return;
+                        }
                         apiArgs.push(optionValue);
                     }
                 } catch (err) {
@@ -1799,9 +1801,9 @@ function generatePrograms(programsList, api) {
                 }
 
                 api[programData.exec].apply(api, apiArgs).then(function (resp) {
-                    console.log(_util2.default.inspect(resp, false, null));
+                    onResult(commandName, resp, false);
                 }).catch(function (error) {
-                    console.log(error);
+                    onResult(commandName, error, true);
                 });
             });
 
@@ -1827,7 +1829,9 @@ function generatePrograms(programsList, api) {
     }
 
     return programs;
-}
+} /**
+   * Created by superpchelka on 25.02.18.
+   */
 
 exports.generatePrograms = generatePrograms;
     });

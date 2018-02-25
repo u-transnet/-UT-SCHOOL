@@ -48,15 +48,15 @@ class Api{
         },
     ];
 
-    static getPrograms(nodeUrl, login, password, privateKey){
+    static getPrograms(nodeUrl, login, password, privateKey, onResult){
         return SchoolApi.init(nodeUrl, login, privateKey).then((api)=>{
             if(!privateKey)
                 privateKey = SchoolApi.generateKeys(login, password).pubKeys.active;
 
             return [
-                ...generatePrograms(Api.programs, api),
-                ...generatePrograms(StudentApi.programs, api.studentApi),
-                ...generatePrograms(TeacherApi.programs, api.teacherApi),
+                ...generatePrograms(Api.programs, api, onResult),
+                ...generatePrograms(StudentApi.programs, api.studentApi, onResult),
+                ...generatePrograms(TeacherApi.programs, api.teacherApi, onResult),
             ];
         });
     }
