@@ -8,7 +8,7 @@
 - [utschool-faucet](https://github.com/u-transnet/utschool-faucet)
 
 ## Contributing
-We'd love to have your helping hand on our project! See [CONTRIBUTING.md]() for more information on what we're looking for and how to get started.
+We'd love to have your helping hand on our project! See [CONTRIBUTING.md](CONTRIBUTING.md) for more information on what we're looking for and how to get started.
 
 ## License
-Project is under the MIT license. See [LICENSE]() for more information.
+Project is under the MIT license. See [LICENSE](LICENSE) for more information.
